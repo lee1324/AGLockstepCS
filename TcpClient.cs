@@ -3,6 +3,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
+using System.Collections.Concurrent;
 
 namespace AGServer
 {
@@ -17,18 +18,18 @@ namespace AGServer
         private Thread receiveThread;
         private readonly object streamLock = new object();
         private Action<string> messageReceivedCallback;
+        private ConcurrentQueue<string> receivedMessages;
+        private AutoResetEvent messageReceivedEvent;
 
         public TcpClientWrapper(int timeout = 30000)
         {
-            this.timeout = timeout > 0 ? timeout : ServerConfig.SOCKET_TIMEOUT;
-            this.isConnected = false;
+            this.timeout = timeout;
+            this.receivedMessages = new ConcurrentQueue<string>();
+            this.messageReceivedEvent = new AutoResetEvent(false);
         }
 
         public void Connect(string serverAddress, int serverPort)
         {
-            if (isConnected)
-                throw new InvalidOperationException("Already connected");
-
             try
             {
                 this.serverAddress = serverAddress;
@@ -37,8 +38,6 @@ namespace AGServer
                 client = new System.Net.Sockets.TcpClient();
                 client.Connect(serverAddress, serverPort);
                 stream = client.GetStream();
-                stream.ReadTimeout = timeout;
-                stream.WriteTimeout = timeout;
                 isConnected = true;
 
                 LogService.Instance.Info(string.Format("Connected to TCP server {0}:{1}", serverAddress, serverPort));
@@ -96,34 +95,25 @@ namespace AGServer
 
             try
             {
+                // Clear any previous messages
+                string previousMessage;
+                while (receivedMessages.TryDequeue(out previousMessage)) { }
+
                 // Send the message
                 Send(message);
 
                 // Wait for response with timeout
-                int originalTimeout = stream.ReadTimeout;
-                stream.ReadTimeout = receiveTimeout;
-
-                try
+                if (messageReceivedEvent.WaitOne(receiveTimeout))
                 {
-                    byte[] buffer = new byte[ServerConfig.BUFFER_SIZE];
-                    int bytesRead = stream.Read(buffer, 0, buffer.Length);
-                    
-                    if (bytesRead > 0)
+                    if (receivedMessages.TryDequeue(out string response))
                     {
-                        string response = Encoding.UTF8.GetString(buffer, 0, bytesRead);
                         LogService.Instance.Info(string.Format("Received response: {0}", response));
                         return response;
                     }
-                    else
-                    {
-                        LogService.Instance.Warning("No response received from server");
-                        return null;
-                    }
                 }
-                finally
-                {
-                    stream.ReadTimeout = originalTimeout;
-                }
+
+                LogService.Instance.Warning("No response received from server within timeout");
+                return null;
             }
             catch (Exception ex)
             {
@@ -150,6 +140,10 @@ namespace AGServer
 
                     string message = Encoding.UTF8.GetString(buffer, 0, bytesRead);
                     LogService.Instance.Info(string.Format("Received from server: {0}", message));
+
+                    // Add to queue for synchronous reads
+                    receivedMessages.Enqueue(message);
+                    messageReceivedEvent.Set();
 
                     // Invoke callback if set
                     if (messageReceivedCallback != null)

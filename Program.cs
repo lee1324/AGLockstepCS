@@ -42,17 +42,38 @@ namespace AGServer
             udpServerThread.IsBackground = true;
             udpServerThread.Start();
             
+            // Start TCP server in a background thread
+            Thread tcpServerThread = new Thread(() => {
+                TcpServer tcpServer = new TcpServer(ServerConfig.TCP_SERVER_PORT, ServerConfig.TCP_MAX_CONNECTIONS, ServerConfig.TCP_CONNECTION_TIMEOUT);
+                tcpServer.Start();
+                
+                // Keep TCP server running
+                while (true)
+                {
+                    Thread.Sleep(1000);
+                }
+            });
+            tcpServerThread.IsBackground = true;
+            tcpServerThread.Start();
+            
             LogService.Instance.Info(string.Format("HTTP server started on port {0}", ServerConfig.HTTP_SERVER_PORT));
             LogService.Instance.Info(string.Format("UDP server started on port {0}", ServerConfig.UDP_SERVER_PORT));
+            LogService.Instance.Info(string.Format("TCP server started on port {0}", ServerConfig.TCP_SERVER_PORT));
+            LogService.Instance.Info("All servers are running. Press any key to stop...");
             
             // Give servers a moment to start
-            Thread.Sleep(2000);
+            Thread.Sleep(3000);
+            
+            // Run comprehensive server test
+            LogService.Instance.Info("=== Starting Comprehensive Server Test ===");
+            ComprehensiveServerTest.RunTest();
             
             // Run TCP server and client test
+            LogService.Instance.Info("=== Starting TCP Server & Client Test ===");
             TcpServerClientTest.RunTest();
             
-            LogService.Instance.Info("Test completed. Press any key to stop servers...");
-            Console.WriteLine("Test completed. Press any key to stop servers...");
+            LogService.Instance.Info("All tests completed. Press any key to stop servers...");
+            Console.WriteLine("All tests completed. Press any key to stop servers...");
             Console.ReadKey();
             
             LogService.Instance.Info("Application finished");

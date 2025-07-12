@@ -9,20 +9,8 @@ namespace AGServer
         {
             LogService.Instance.Info("=== TCP Server & Client Test ===");
             
-            // Start TCP server in background thread
-            Thread serverThread = new Thread(() => {
-                TcpServer server = new TcpServer(ServerConfig.TCP_SERVER_PORT, ServerConfig.TCP_MAX_CONNECTIONS, ServerConfig.TCP_CONNECTION_TIMEOUT);
-                server.Start();
-                
-                // Keep server running for the duration of the test
-                Thread.Sleep(15000);
-                server.Stop();
-            });
-            serverThread.IsBackground = true;
-            serverThread.Start();
-            
-            // Give server a moment to start
-            Thread.Sleep(2000);
+            // Give server a moment to ensure it's ready
+            Thread.Sleep(1000);
             
             // Test single client
             TestSingleClient();
@@ -100,7 +88,7 @@ namespace AGServer
                     try
                     {
                         TcpClientWrapper client = new TcpClientWrapper();
-                        client.Connect("127.0.0.1", 9007);
+                        client.Connect(ServerConfig.LOCALHOST, ServerConfig.TCP_SERVER_PORT);
                         
                         for (int j = 1; j <= 2; j++)
                         {
@@ -138,7 +126,7 @@ namespace AGServer
                     try
                     {
                         TcpClientWrapper client = new TcpClientWrapper();
-                        client.Connect("127.0.0.1", 9007);
+                        client.Connect(ServerConfig.LOCALHOST, ServerConfig.TCP_SERVER_PORT);
                         
                         // Set up message callback
                         client.SetMessageReceivedCallback((message) =>
@@ -181,7 +169,7 @@ namespace AGServer
                     try
                     {
                         TcpClientWrapper client = new TcpClientWrapper();
-                        client.Connect("127.0.0.1", 9007);
+                        client.Connect(ServerConfig.LOCALHOST, ServerConfig.TCP_SERVER_PORT);
                         
                         LogService.Instance.Info(string.Format("Connection {0} established successfully", clientId));
                         
