@@ -18,7 +18,7 @@ namespace AGServer
         
         // TCP Server Configuration
         public const int TCP_SERVER_PORT = 9007;
-        public const int TCP_MAX_CONNECTIONS = 10;
+        public const int TCP_MAX_CONNECTIONS = 5000;
         public const int TCP_CONNECTION_TIMEOUT = 30000;
         
         // Logging Configuration
