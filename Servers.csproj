@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net4.0</TargetFramework>
+    <AssemblyName>Servers</AssemblyName>
+    <RootNamespace>Servers</RootNamespace>
+  </PropertyGroup>
+
+</Project> 

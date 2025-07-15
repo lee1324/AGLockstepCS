@@ -61,4 +61,4 @@ RUN adduser \
     appuser
 USER appuser
 
-ENTRYPOINT ["dotnet", "SimpleHttpServer.dll"]
+ENTRYPOINT ["dotnet", "Servers.dll"]

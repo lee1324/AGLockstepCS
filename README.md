@@ -46,7 +46,7 @@ The server will start on port 8080. You can access it at `http://localhost:8080`
 - `LogService.cs` - Comprehensive logging service
 - `LogServiceTest.cs` - LogService demonstration and testing
 - `ServerConfig.cs` - Centralized configuration for all servers
-- `SimpleHttpServer.csproj` - Project configuration
+- `Servers.csproj` - Project configuration
 
 ## Usage
 
