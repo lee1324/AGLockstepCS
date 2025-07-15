@@ -4,6 +4,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Collections.Concurrent;
+using SimpleJson;
 
 namespace AGServer
 {
@@ -65,8 +66,9 @@ namespace AGServer
             this.messageReceivedCallback = callback;
         }
 
-        public void Send(string message)
+        public void Send(string path, JsonNode js)
         {
+            string message = js.ToString();
             if (!isConnected)
                 throw new InvalidOperationException("Not connected to server");
 
@@ -88,35 +90,25 @@ namespace AGServer
             }
         }
 
-        public string SendAndReceive(string message, int receiveTimeout = 5000)
-        {
+        public string SendAndReceive(string path, JsonNode js, int receiveTimeout = 5000) {
             if (!isConnected)
                 throw new InvalidOperationException("Not connected to server");
-
-            try
-            {
+            try {
                 // Clear any previous messages
                 string previousMessage;
                 while (receivedMessages.TryDequeue(out previousMessage)) { }
-
                 // Send the message
-                Send(message);
-
+                Send(path, js);
                 // Wait for response with timeout
-                if (messageReceivedEvent.WaitOne(receiveTimeout))
-                {
-                    if (receivedMessages.TryDequeue(out string response))
-                    {
+                if (messageReceivedEvent.WaitOne(receiveTimeout)) {
+                    if (receivedMessages.TryDequeue(out string response)) {
                         LogService.Instance.Info(string.Format("Received response: {0}", response));
                         return response;
                     }
                 }
-
                 LogService.Instance.Warning("No response received from server within timeout");
                 return null;
-            }
-            catch (Exception ex)
-            {
+            } catch (Exception ex) {
                 LogService.Instance.Error("Error in send and receive: " + ex.Message);
                 throw;
             }
@@ -169,26 +161,18 @@ namespace AGServer
             }
         }
 
-        public void SendAsync(string message, Action<string> callback = null)
-        {
+        public void SendAsync(string path, JsonNode js, Action<string> callback = null) {
             if (!isConnected)
                 throw new InvalidOperationException("Not connected to server");
-
-            Thread thread = new Thread(() =>
-            {
-                try
-                {
-                    string response = SendAndReceive(message);
-                    if (callback != null)
-                    {
+            Thread thread = new Thread(() => {
+                try {
+                    string response = SendAndReceive(path, js);
+                    if (callback != null) {
                         callback(response);
                     }
-                }
-                catch (Exception ex)
-                {
+                } catch (Exception ex) {
                     LogService.Instance.Error("Async send error: " + ex.Message);
-                    if (callback != null)
-                    {
+                    if (callback != null) {
                         callback(null);
                     }
                 }

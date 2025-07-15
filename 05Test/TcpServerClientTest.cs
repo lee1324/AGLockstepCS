@@ -1,5 +1,6 @@
 using System;
 using System.Threading;
+using SimpleJson;
 
 namespace AGServer
 {
@@ -38,7 +39,9 @@ namespace AGServer
                 
                 // Test 1: Simple send and receive
                 LogService.Instance.Info("Test 1: Simple Send and Receive");
-                string response1 = client.SendAndReceive("Hello TCP Server!");
+                var js = new JsonObject();
+                js["msg"] = "Hello TCP Server!";
+                string response1 = client.SendAndReceive("/test", js);
                 LogService.Instance.Info("Response 1: " + response1);
                 
                 // Test 2: Multiple messages
@@ -46,7 +49,9 @@ namespace AGServer
                 string[] messages = { "Message 1", "Message 2", "Message 3" };
                 foreach (string msg in messages)
                 {
-                    string response = client.SendAndReceive(msg);
+                    var jsMsg = new JsonObject();
+                    jsMsg["msg"] = msg;
+                    string response = client.SendAndReceive("/test", jsMsg);
                     LogService.Instance.Info("Message: " + msg + " -> Response: " + response);
                     Thread.Sleep(500);
                 }
@@ -55,12 +60,16 @@ namespace AGServer
                 LogService.Instance.Info("Test 3: Long Message");
                 string longMessage = "This is a longer message to test TCP server handling of larger data packets. " +
                                    "It contains multiple sentences and should be properly echoed back by the server.";
-                string longResponse = client.SendAndReceive(longMessage);
+                var jsLongMessage = new JsonObject();
+                jsLongMessage["msg"] = longMessage;
+                string longResponse = client.SendAndReceive("/test", jsLongMessage);
                 LogService.Instance.Info("Long Response: " + longResponse);
                 
                 // Test 4: Async send
                 LogService.Instance.Info("Test 4: Async Send");
-                client.SendAsync("Async message", (response) =>
+                var jsAsyncMessage = new JsonObject();
+                jsAsyncMessage["msg"] = "Async message";
+                client.SendAsync("/test", jsAsyncMessage, (response) =>
                 {
                     LogService.Instance.Info("Async Response: " + response);
                 });
@@ -92,9 +101,10 @@ namespace AGServer
                         
                         for (int j = 1; j <= 2; j++)
                         {
-                            string message = string.Format("Client {0} - Message {1}", clientId, j);
-                            string response = client.SendAndReceive(message);
-                            LogService.Instance.Info(string.Format("Client {0}: {1} -> {2}", clientId, message, response));
+                            var jsMessage = new JsonObject();
+                            jsMessage["msg"] = string.Format("Client {0} - Message {1}", clientId, j);
+                            string response = client.SendAndReceive("/test", jsMessage);
+                            LogService.Instance.Info(string.Format("Client {0}: {1} -> {2}", clientId, jsMessage["msg"], response));
                             Thread.Sleep(ServerConfig.TEST_DELAY_MS);
                         }
                         

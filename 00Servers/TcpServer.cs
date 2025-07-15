@@ -4,6 +4,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
+using System.IO;
 
 namespace AGServer
 {
@@ -253,7 +254,8 @@ namespace AGServer
         private void ReceiveLoop()
         {
             byte[] buffer = new byte[ServerConfig.BUFFER_SIZE];
-            
+            var ms = new MemoryStream(buffer);
+            var reader = new BinaryReader(ms);
             while (isConnected)
             {
                 try
@@ -265,7 +267,11 @@ namespace AGServer
                         break;
                     }
 
-                    string message = Encoding.UTF8.GetString(buffer, 0, bytesRead);
+                    ms.Position = 0;
+                    string path = reader.ReadString();
+                    string js = reader.ReadString();
+
+                    string message = path + js;
                     LogService.Instance.Info(string.Format("Received from {0}: {1}", remoteEndPoint, message));
 
                     // Echo the message back

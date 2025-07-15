@@ -10,37 +10,11 @@ namespace AGServer
     {
         static void Main(string[] args)
         {
+            // Toggle to enable/disable UDP server
+            bool enableUdpServer = false; // Set to false to disable UDP server
             // Start the logging service
             LogService.Instance.Start();
             LogService.Instance.Info("Application started");
-            
-            // Start HTTP server in a background thread
-            Thread httpServerThread = new Thread(() => {
-                HttpServer httpServer = new HttpServer(ServerConfig.HTTP_SERVER_PORT);
-                httpServer.Start();
-                
-                // Keep HTTP server running
-                while (true)
-                {
-                    Thread.Sleep(1000);
-                }
-            });
-            httpServerThread.IsBackground = true;
-            httpServerThread.Start();
-            
-            // Start UDP server in a background thread
-            Thread udpServerThread = new Thread(() => {
-                UdpServer udpServer = new UdpServer(ServerConfig.UDP_SERVER_PORT, ServerConfig.UDP_ECHO_ENABLED);
-                udpServer.Start();
-                
-                // Keep UDP server running
-                while (true)
-                {
-                    Thread.Sleep(1000);
-                }
-            });
-            udpServerThread.IsBackground = true;
-            udpServerThread.Start();
             
             // Start TCP server in a background thread
             Thread tcpServerThread = new Thread(() => {
@@ -56,8 +30,28 @@ namespace AGServer
             tcpServerThread.IsBackground = true;
             tcpServerThread.Start();
             
-            LogService.Instance.Info(string.Format("HTTP server started on port {0}", ServerConfig.HTTP_SERVER_PORT));
-            LogService.Instance.Info(string.Format("UDP server started on port {0}", ServerConfig.UDP_SERVER_PORT));
+            // Start UDP server in a background thread (toggle)
+            if (enableUdpServer)
+            {
+                Thread udpServerThread = new Thread(() => {
+                    UdpServer udpServer = new UdpServer(ServerConfig.UDP_SERVER_PORT, ServerConfig.UDP_ECHO_ENABLED);
+                    udpServer.Start();
+                    
+                    // Keep UDP server running
+                    while (true)
+                    {
+                        Thread.Sleep(1000);
+                    }
+                });
+                udpServerThread.IsBackground = true;
+                udpServerThread.Start();
+                LogService.Instance.Info(string.Format("UDP server started on port {0}", ServerConfig.UDP_SERVER_PORT));
+            }
+            else
+            {
+                LogService.Instance.Info("UDP server is disabled by toggle.");
+            }
+            
             LogService.Instance.Info(string.Format("TCP server started on port {0}", ServerConfig.TCP_SERVER_PORT));
             LogService.Instance.Info("All servers are running. Press any key to stop...");
             
@@ -65,8 +59,8 @@ namespace AGServer
             Thread.Sleep(3000);
             
             // Run comprehensive server test
-            LogService.Instance.Info("=== Starting Comprehensive Server Test ===");
-            ComprehensiveServerTest.RunTest();
+            //LogService.Instance.Info("=== Starting Comprehensive Server Test ===");
+            //ComprehensiveServerTest.RunTest();
             
             // Run TCP server and client test
             LogService.Instance.Info("=== Starting TCP Server & Client Test ===");
