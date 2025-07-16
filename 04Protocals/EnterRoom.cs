@@ -1,4 +1,4 @@
-    namespace AGServer {
+    namespace AGSyncCS {
     
         public class CM_EnterRoom{
             public string userID;

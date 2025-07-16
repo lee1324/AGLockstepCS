@@ -2,7 +2,7 @@ using System;
 using System.Threading;
 using SimpleJson;
 
-namespace AGServer
+namespace AGSyncCS
 {
     public class TcpServerClientTest
     {

@@ -22,7 +22,7 @@ namespace AGSyncCS
                 TcpServer tcpServer = new TcpServer(ServerConfig.TCP_SERVER_PORT, 
                     ServerConfig.TCP_MAX_CONNECTIONS, ServerConfig.TCP_CONNECTION_TIMEOUT);
                 // Register a listener for path "/test"
-                tcpServer.AddListener("newRoom", node => {
+                tcpServer.SetListener("newRoom", node => {
                     LogService.Instance.Info($"[Listener] Received on newRoom: {node}");
                 });
                 tcpServer.Start();

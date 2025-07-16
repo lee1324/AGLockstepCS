@@ -5,11 +5,18 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.IO;
+using SimpleJson;
 
-namespace AGServer
+namespace AGSyncCS
 {
-    public class TcpServer
-    {
+    public class TcpServer {
+        public void on(CM_NewRoom cm , SM_NewRoom sm){
+
+        }
+
+
+
+
         private TcpListener listener;
         private bool isRunning;
         private int port;
@@ -111,7 +118,7 @@ namespace AGServer
                     }
 
                     // Create new connection handler
-                    TcpClientConnection connection = new TcpClientConnection(client, connectionTimeout);
+                    TcpClientConnection connection = new TcpClientConnection(this, client, connectionTimeout);
                     
                     lock (connectionsLock)
                     {
@@ -198,6 +205,8 @@ namespace AGServer
         {
             get { return isRunning; }
         }
+
+     
     }
 
     public class TcpClientConnection
@@ -209,9 +218,11 @@ namespace AGServer
         private int timeout;
         private Thread receiveThread;
         private readonly object streamLock = new object();
+        private TcpServer server;
 
-        public TcpClientConnection(TcpClient client, int timeout)
+        public TcpClientConnection(TcpServer server, TcpClient client, int timeout)
         {
+            this.server = server;
             this.client = client;
             this.timeout = timeout;
             this.isConnected = false;
@@ -268,11 +279,30 @@ namespace AGServer
                     }
 
                     ms.Position = 0;
-                    string path = reader.ReadString();
-                    string js = reader.ReadString();
+                    int protocal = reader.ReadInt();
+                    SM sm = null;
+                    if(protocal == Protocals.NewRoom){
+                        var cm = new CM_NewRoom();
+                        var sm = new SM_NewRoom();//response
+                        cm.readFrom(reader);
+                        tcpServer.on(cm, sm);
+                    }
 
-                    string message = path + js;
-                    LogService.Instance.Info(string.Format("Received from {0}: {1}", remoteEndPoint, message));
+                    // if (server.listeners.TryGetValue(protocal, out var callback))
+                    // {
+                    //     try
+                    //     {
+                    //         var node = SimpleJson.JsonNode.Parse(js);
+                    //         callback(node);
+                    //     }
+                    //     catch (Exception ex)
+                    //     {
+                    //         LogService.Instance.Error($"Listener for path '{path}' failed: {ex.Message}");
+                    //     }
+                    // }
+
+                    // string message = protocal + js;
+                    // LogService.Instance.Info(string.Format("Received from {0}: {1}", remoteEndPoint, message));
 
                     // Echo the message back
                     Send("Echo: " + message);
@@ -288,21 +318,25 @@ namespace AGServer
             }
         }
 
-        public void Send(string message)
+        public void Send(SM message)
         {
             if (!isConnected)
                 throw new InvalidOperationException("Connection is not active");
 
             try
             {
-                byte[] data = Encoding.UTF8.GetBytes(message);
+                byte[BUFFER_SIZE] buffer;
+                var stream = new MemoryStream(buffer);
+                var writer = new BinaryWriter(stream);
+                stream.seekpos = 0;
+                message.writeTo(writer);
                 
                 lock (streamLock)
                 {
-                    stream.Write(data, 0, data.Length);
+                    stream.Write(data, 0, stream.Length);
                 }
                 
-                LogService.Instance.Debug(string.Format("Sent to {0}: {1}", remoteEndPoint, message));
+                LogService.Instance.Debug(string.Format("Sent to {0}: {1}", remoteEndPoint, message.ToString()));
             }
             catch (Exception ex)
             {

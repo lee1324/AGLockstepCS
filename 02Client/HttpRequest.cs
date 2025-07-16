@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace AGServer
+namespace AGSyncCS
 {
     public class HttpRequest
     {

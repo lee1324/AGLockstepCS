@@ -1,6 +1,6 @@
 using System;
 
-namespace AGServer
+namespace AGSyncCS
 {
     public static class ServerConfig
     {

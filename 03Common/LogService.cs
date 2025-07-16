@@ -4,7 +4,7 @@ using System.IO;
 using System.Text;
 using System.Threading;
 
-namespace AGServer
+namespace AGSyncCS
 {
     public enum LogLevel
     {

@@ -1,7 +1,7 @@
 using System;
 using System.Threading;
 
-namespace AGServer
+namespace AGSyncCS
 {
     public class LogServiceTest
     {

@@ -6,7 +6,7 @@ using System.Threading;
 using System.Collections.Concurrent;
 using SimpleJson;
 
-namespace AGServer
+namespace AGSyncCS
 {
     public class TcpClientWrapper
     {
