@@ -6,11 +6,13 @@ using System.Text;
 using System.Threading;
 using System.IO;
 using SimpleJson;
+using System.Security;
 
 namespace AGSyncCS
 {
     public class TcpServer {
-        public void on(CM_NewRoom cm , SM_NewRoom sm){
+        public void on(CM_NewRoom cm, ref int errorCode, ref SM_NewRoom sm)
+        {
 
         }
 
@@ -172,23 +174,6 @@ namespace AGSyncCS
             }
         }
 
-        public void Broadcast(string message)
-        {
-            lock (connectionsLock)
-            {
-                foreach (var connection in activeConnections)
-                {
-                    try
-                    {
-                        connection.Send(message);
-                    }
-                    catch (Exception ex)
-                    {
-                        LogService.Instance.Error("Error broadcasting to connection: " + ex.Message);
-                    }
-                }
-            }
-        }
 
         public int ActiveConnectionCount
         {
@@ -279,33 +264,37 @@ namespace AGSyncCS
                     }
 
                     ms.Position = 0;
-                    int protocal = reader.ReadInt();
-                    SM sm = null;
-                    if(protocal == Protocals.NewRoom){
+                    int protocal = reader.ReadInt32();
+                    int errorCode = ErrorCode.None;//will be sent to client
+                    int UID = 0;//Uid 放protocal之后（因为 protocal不存在uid也无必要）
+
+                    if (protocal == Protocals.NewRoom)
+                    {
+                        UID = reader.ReadInt32();
                         var cm = new CM_NewRoom();
-                        var sm = new SM_NewRoom();//response
                         cm.readFrom(reader);
-                        tcpServer.on(cm, sm);
+
+                        SM_NewRoom sm = null;
+                        server.on(cm, ref errorCode, ref sm);
+                        Send(protocal, errorCode, sm);
+                    }
+                    else if (protocal == Protocals.EnterRoom)
+                    {
+                        var cm = new CM_EnterRoom();
+                        SM_EnterRoom sm = null;
+
+                        //lstodo
+                    }
+                    else
+                    {
+                        // Unknown protocol/malicious client, send error response
+                        // var sm = new SM();
+                        // sm.errorCode = ErrorCode.Unknown_Protocal; // or a suitable error code
+                        // Send(sm);
+                        //lstodo close client
+                        LogService.Instance.Warning($"Unknown protocol: {protocal} from {remoteEndPoint}");
                     }
 
-                    // if (server.listeners.TryGetValue(protocal, out var callback))
-                    // {
-                    //     try
-                    //     {
-                    //         var node = SimpleJson.JsonNode.Parse(js);
-                    //         callback(node);
-                    //     }
-                    //     catch (Exception ex)
-                    //     {
-                    //         LogService.Instance.Error($"Listener for path '{path}' failed: {ex.Message}");
-                    //     }
-                    // }
-
-                    // string message = protocal + js;
-                    // LogService.Instance.Info(string.Format("Received from {0}: {1}", remoteEndPoint, message));
-
-                    // Echo the message back
-                    Send("Echo: " + message);
                 }
                 catch (Exception ex)
                 {
@@ -318,25 +307,33 @@ namespace AGSyncCS
             }
         }
 
-        public void Send(SM message)
+        
+        //前端不记录状态，加上后端还有push，所以protocal必须
+        public void Send(int protocal, int errorCode, SM sm)
         {
             if (!isConnected)
                 throw new InvalidOperationException("Connection is not active");
 
             try
             {
-                byte[BUFFER_SIZE] buffer;
-                var stream = new MemoryStream(buffer);
+                byte[] buffer = new byte[ServerConfig.BUFFER_SIZE];
+                var ms = new MemoryStream(buffer);
                 var writer = new BinaryWriter(stream);
-                stream.seekpos = 0;
-                message.writeTo(writer);
-                
+                ms.Seek(0, SeekOrigin.Begin);
+
+                writer.Write((int)MessageType.Response);
+                writer.Write(protocal);
+
+                writer.Write(errorCode);//在push时无errorcode，但是push也用这套，省（个接口+推送判断）
+                if (errorCode == ErrorCode.None)
+                    sm.writeTo(writer);
+
                 lock (streamLock)
                 {
-                    stream.Write(data, 0, stream.Length);
+                    stream.Write(buffer, 0, (int)ms.Length);
                 }
-                
-                LogService.Instance.Debug(string.Format("Sent to {0}: {1}", remoteEndPoint, message.ToString()));
+
+                LogService.Instance.Debug(string.Format("Sent to {0}: {1}", remoteEndPoint, sm.ToString()));
             }
             catch (Exception ex)
             {

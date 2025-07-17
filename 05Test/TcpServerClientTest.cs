@@ -19,9 +19,6 @@ namespace AGSyncCS
             // Test multiple clients
             TestMultipleClients();
             
-            // Test server broadcast
-            TestServerBroadcast();
-            
             // Test connection limits
             TestConnectionLimits();
             
@@ -35,7 +32,7 @@ namespace AGSyncCS
             try
             {
                 TcpClientWrapper client = new TcpClientWrapper();
-                client.Connect(ServerConfig.LOCALHOST, ServerConfig.TCP_SERVER_PORT);
+                client.Connect(ServerConfig.TCP_SERVER_ADDRESS, ServerConfig.TCP_SERVER_PORT);
                 
                 // Test 1: Simple send and receive
                 LogService.Instance.Info("Test 1: Simple Send and Receive");
@@ -97,7 +94,7 @@ namespace AGSyncCS
                     try
                     {
                         TcpClientWrapper client = new TcpClientWrapper();
-                        client.Connect(ServerConfig.LOCALHOST, ServerConfig.TCP_SERVER_PORT);
+                        client.Connect(ServerConfig.TCP_SERVER_ADDRESS, ServerConfig.TCP_SERVER_PORT);
                         
                         for (int j = 1; j <= 2; j++)
                         {
@@ -123,48 +120,7 @@ namespace AGSyncCS
             Thread.Sleep(3000);
         }
         
-        private static void TestServerBroadcast()
-        {
-            LogService.Instance.Info("--- Testing Server Broadcast ---");
-            
-            // Start a few clients that will receive broadcasts
-            for (int i = 1; i <= 2; i++)
-            {
-                int clientId = i;
-                Thread clientThread = new Thread(() =>
-                {
-                    try
-                    {
-                        TcpClientWrapper client = new TcpClientWrapper();
-                        client.Connect(ServerConfig.LOCALHOST, ServerConfig.TCP_SERVER_PORT);
-                        
-                        // Set up message callback
-                        client.SetMessageReceivedCallback((message) =>
-                        {
-                            LogService.Instance.Info(string.Format("Client {0} received broadcast: {1}", clientId, message));
-                        });
-                        
-                        // Keep connection alive for a while
-                        Thread.Sleep(ServerConfig.TEST_TIMEOUT_MS);
-                        
-                        client.Close();
-                    }
-                    catch (Exception ex)
-                    {
-                        LogService.Instance.Error(string.Format("Broadcast Client {0} Error: {1}", clientId, ex.Message));
-                    }
-                });
-                clientThread.IsBackground = true;
-                clientThread.Start();
-            }
-            
-            // Wait a moment for clients to connect
-            Thread.Sleep(1000);
-            
-            // Note: In a real scenario, you would call server.Broadcast() here
-            // For this test, we'll just send individual messages
-            LogService.Instance.Info("Broadcast test completed (individual messages sent)");
-        }
+       
         
         private static void TestConnectionLimits()
         {
@@ -179,7 +135,7 @@ namespace AGSyncCS
                     try
                     {
                         TcpClientWrapper client = new TcpClientWrapper();
-                        client.Connect(ServerConfig.LOCALHOST, ServerConfig.TCP_SERVER_PORT);
+                        client.Connect(ServerConfig.TCP_SERVER_ADDRESS, ServerConfig.TCP_SERVER_PORT);
                         
                         LogService.Instance.Info(string.Format("Connection {0} established successfully", clientId));
                         

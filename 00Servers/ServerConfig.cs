@@ -1,9 +1,14 @@
 using System;
+using System.Runtime.InteropServices;
 
 namespace AGSyncCS
 {
     public static class ServerConfig
     {
+        public const string TCP_SERVER_ADDRESS = "127.0.0.1";
+
+
+
         // Server IP Addresses
         public const string LOCALHOST = "127.0.0.1";
         public const string ANY_ADDRESS = "0.0.0.0";
