@@ -15,9 +15,9 @@ namespace AGSyncCS
         Fatal = 4
     }
 
-    public class LogService
+    public class Logger
     {
-        private static LogService instance;
+        private static Logger instance;
         private static readonly object lockObject = new object();
         
         private string logFilePath;
@@ -29,7 +29,7 @@ namespace AGSyncCS
         private bool isRunning;
         private readonly object queueLock = new object();
 
-        public LogService()
+        public Logger()
         {
             logFilePath = ServerConfig.LOG_FILE_PATH;
             minimumLevel = ServerConfig.DEFAULT_LOG_LEVEL;
@@ -39,7 +39,7 @@ namespace AGSyncCS
             isRunning = false;
         }
 
-        public static LogService Instance
+        public static Logger Instance
         {
             get
             {
@@ -49,7 +49,7 @@ namespace AGSyncCS
                     {
                         if (instance == null)
                         {
-                            instance = new LogService();
+                            instance = new Logger();
                         }
                     }
                 }

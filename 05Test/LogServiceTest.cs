@@ -10,20 +10,20 @@ namespace AGSyncCS
             Console.WriteLine("=== LogService Test ===");
             
             // Configure the log service
-            LogService.Instance.LogFilePath = "test.log";
-            LogService.Instance.MinimumLevel = LogLevel.Debug;
-            LogService.Instance.EnableConsoleOutput = true;
-            LogService.Instance.EnableFileOutput = true;
+            Logger.Instance.LogFilePath = "test.log";
+            Logger.Instance.MinimumLevel = LogLevel.Debug;
+            Logger.Instance.EnableConsoleOutput = true;
+            Logger.Instance.EnableFileOutput = true;
             
             // Start the log service
-            LogService.Instance.Start();
+            Logger.Instance.Start();
             
             // Test different log levels
-            LogService.Instance.Debug("This is a debug message");
-            LogService.Instance.Info("This is an info message");
-            LogService.Instance.Warning("This is a warning message");
-            LogService.Instance.Error("This is an error message");
-            LogService.Instance.Fatal("This is a fatal message");
+            Logger.Instance.Debug("This is a debug message");
+            Logger.Instance.Info("This is an info message");
+            Logger.Instance.Warning("This is a warning message");
+            Logger.Instance.Error("This is an error message");
+            Logger.Instance.Fatal("This is a fatal message");
             
             // Test logging with exception
             try
@@ -32,7 +32,7 @@ namespace AGSyncCS
             }
             catch (Exception ex)
             {
-                LogService.Instance.Error("Caught an exception", ex);
+                Logger.Instance.Error("Caught an exception", ex);
             }
             
             // Test multi-threaded logging
@@ -43,7 +43,7 @@ namespace AGSyncCS
                 {
                     for (int j = 0; j < 3; j++)
                     {
-                        LogService.Instance.Info(string.Format("Thread {0} - Message {1}", threadId, j));
+                        Logger.Instance.Info(string.Format("Thread {0} - Message {1}", threadId, j));
                         Thread.Sleep(100);
                     }
                 });
@@ -55,14 +55,14 @@ namespace AGSyncCS
             
             // Test reading recent logs
             Console.WriteLine("\n=== Recent Logs ===");
-            string[] recentLogs = LogService.Instance.GetRecentLogs(10);
+            string[] recentLogs = Logger.Instance.GetRecentLogs(10);
             foreach (string log in recentLogs)
             {
                 Console.WriteLine(log);
             }
             
             // Stop the log service
-            LogService.Instance.Stop();
+            Logger.Instance.Stop();
             
             Console.WriteLine("\n=== LogService Test Complete ===");
         }

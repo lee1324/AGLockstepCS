@@ -49,14 +49,14 @@ namespace AGSyncCS
 
         private void ListenForClients()
         {
-            LogService.Instance.Info("HTTP Server started listening on port " + port);
+            Logger.Instance.Info("HTTP Server started listening on port " + port);
             
             while (isRunning)
             {
                 try
                 {
                     TcpClient client = listener.AcceptTcpClient();
-                    LogService.Instance.Debug("New client connected: " + client.Client.RemoteEndPoint);
+                    Logger.Instance.Debug("New client connected: " + client.Client.RemoteEndPoint);
                     
                     Thread clientThread = new Thread(HandleClient);
                     clientThread.Start(client);
@@ -65,7 +65,7 @@ namespace AGSyncCS
                 {
                     if (isRunning)
                     {
-                        LogService.Instance.Error("Error accepting client: " + ex.Message);
+                        Logger.Instance.Error("Error accepting client: " + ex.Message);
                     }
                 }
             }
@@ -84,7 +84,7 @@ namespace AGSyncCS
                 string request = Encoding.ASCII.GetString(buffer, 0, bytesRead);
 
                 HttpRequest httpRequest = ParseRequest(request);
-                LogService.Instance.Info(string.Format("Request from {0}: {1} {2}", 
+                Logger.Instance.Info(string.Format("Request from {0}: {1} {2}", 
                     clientAddress, httpRequest.Method, httpRequest.Path));
 
                 HttpResponse httpResponse = ProcessRequest(httpRequest);
@@ -93,18 +93,18 @@ namespace AGSyncCS
                 byte[] responseBytes = Encoding.ASCII.GetBytes(responseString);
                 stream.Write(responseBytes, 0, responseBytes.Length);
                 
-                LogService.Instance.Debug(string.Format("Response to {0}: {1} {2}", 
+                Logger.Instance.Debug(string.Format("Response to {0}: {1} {2}", 
                     clientAddress, httpResponse.StatusCode, httpResponse.StatusText));
             }
             catch (Exception ex)
             {
-                LogService.Instance.Error("Error handling client " + clientAddress + ": " + ex.Message);
+                Logger.Instance.Error("Error handling client " + clientAddress + ": " + ex.Message);
             }
             finally
             {
                 stream.Close();
                 client.Close();
-                LogService.Instance.Debug("Client disconnected: " + clientAddress);
+                Logger.Instance.Debug("Client disconnected: " + clientAddress);
             }
         }
 

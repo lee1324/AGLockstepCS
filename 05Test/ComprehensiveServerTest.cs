@@ -10,7 +10,7 @@ namespace AGSyncCS
     {
         public static void RunTest()
         {
-            LogService.Instance.Info("=== Comprehensive Server Test ===");
+            Logger.Instance.Info("=== Comprehensive Server Test ===");
             
             // Test HTTP Server
             TestHttpServer();
@@ -21,45 +21,45 @@ namespace AGSyncCS
             // Test both servers simultaneously
             TestBothServersSimultaneously();
             
-            LogService.Instance.Info("=== Comprehensive Server Test Complete ===");
+            Logger.Instance.Info("=== Comprehensive Server Test Complete ===");
         }
         
         private static void TestHttpServer()
         {
-            LogService.Instance.Info(string.Format("--- Testing HTTP Server (Port {0}) ---", ServerConfig.HTTP_SERVER_PORT));
+            Logger.Instance.Info(string.Format("--- Testing HTTP Server (Port {0}) ---", ServerConfig.HTTP_SERVER_PORT));
             
             try
             {
                 // Test 1: Status endpoint
-                LogService.Instance.Info("Test 1: HTTP Status Endpoint");
+                Logger.Instance.Info("Test 1: HTTP Status Endpoint");
                 string statusResponse = SendHttpRequest("GET", ServerConfig.GetHttpServerUrl() + "/api/status", null);
-                LogService.Instance.Info("Status Response: " + statusResponse);
+                Logger.Instance.Info("Status Response: " + statusResponse);
                 
                 // Test 2: Echo endpoint
-                LogService.Instance.Info("Test 2: HTTP Echo Endpoint");
+                Logger.Instance.Info("Test 2: HTTP Echo Endpoint");
                 string echoResponse = SendHttpRequest("POST", ServerConfig.GetHttpServerUrl() + "/api/echo", "Hello from HTTP test!");
-                LogService.Instance.Info("Echo Response: " + echoResponse);
+                Logger.Instance.Info("Echo Response: " + echoResponse);
                 
                 // Test 3: Main page
-                LogService.Instance.Info("Test 3: HTTP Main Page");
+                Logger.Instance.Info("Test 3: HTTP Main Page");
                 string mainPageResponse = SendHttpRequest("GET", ServerConfig.GetHttpServerUrl() + "/", null);
-                LogService.Instance.Info("Main Page Response Length: " + mainPageResponse.Length + " characters");
+                Logger.Instance.Info("Main Page Response Length: " + mainPageResponse.Length + " characters");
                 
                 // Test 4: 404 endpoint
-                LogService.Instance.Info("Test 4: HTTP 404 Endpoint");
+                Logger.Instance.Info("Test 4: HTTP 404 Endpoint");
                 string notFoundResponse = SendHttpRequest("GET", ServerConfig.GetHttpServerUrl() + "/nonexistent", null);
-                LogService.Instance.Info("404 Response: " + notFoundResponse);
+                Logger.Instance.Info("404 Response: " + notFoundResponse);
                 
             }
             catch (Exception ex)
             {
-                LogService.Instance.Error("HTTP Server Test Error: " + ex.Message);
+                Logger.Instance.Error("HTTP Server Test Error: " + ex.Message);
             }
         }
         
         private static void TestUdpServer()
         {
-            LogService.Instance.Info(string.Format("--- Testing UDP Server (Port {0}) ---", ServerConfig.UDP_SERVER_PORT));
+            Logger.Instance.Info(string.Format("--- Testing UDP Server (Port {0}) ---", ServerConfig.UDP_SERVER_PORT));
             
             try
             {
@@ -67,39 +67,39 @@ namespace AGSyncCS
                 client.Connect(ServerConfig.LOCALHOST, ServerConfig.UDP_SERVER_PORT);
                 
                 // Test 1: Simple message
-                LogService.Instance.Info("Test 1: UDP Simple Message");
+                Logger.Instance.Info("Test 1: UDP Simple Message");
                 string response1 = client.SendAndReceive("Hello UDP Server!");
-                LogService.Instance.Info("UDP Response 1: " + response1);
+                Logger.Instance.Info("UDP Response 1: " + response1);
                 
                 // Test 2: Multiple messages
-                LogService.Instance.Info("Test 2: UDP Multiple Messages");
+                Logger.Instance.Info("Test 2: UDP Multiple Messages");
                 string[] messages = { "Test A", "Test B", "Test C" };
                 foreach (string msg in messages)
                 {
                     string response = client.SendAndReceive(msg);
-                    LogService.Instance.Info("UDP Message: " + msg + " -> Response: " + response);
+                    Logger.Instance.Info("UDP Message: " + msg + " -> Response: " + response);
                     Thread.Sleep(200);
                 }
                 
                 // Test 3: Long message
-                LogService.Instance.Info("Test 3: UDP Long Message");
+                Logger.Instance.Info("Test 3: UDP Long Message");
                 string longMessage = "This is a longer message to test UDP server handling of larger packets. " +
                                    "It contains multiple sentences and should be properly echoed back by the server.";
                 string longResponse = client.SendAndReceive(longMessage);
-                LogService.Instance.Info("UDP Long Response: " + longResponse);
+                Logger.Instance.Info("UDP Long Response: " + longResponse);
                 
                 client.Close();
                 
             }
             catch (Exception ex)
             {
-                LogService.Instance.Error("UDP Server Test Error: " + ex.Message);
+                Logger.Instance.Error("UDP Server Test Error: " + ex.Message);
             }
         }
         
         private static void TestBothServersSimultaneously()
         {
-            LogService.Instance.Info("--- Testing Both Servers Simultaneously ---");
+            Logger.Instance.Info("--- Testing Both Servers Simultaneously ---");
             
             // Start multiple threads to test both servers at the same time
             Thread httpTestThread = new Thread(() => {
@@ -108,12 +108,12 @@ namespace AGSyncCS
                     try
                     {
                         string response = SendHttpRequest("GET", ServerConfig.GetHttpServerUrl() + "/api/status", null);
-                        LogService.Instance.Info("HTTP Thread Test " + i + ": " + response);
+                        Logger.Instance.Info("HTTP Thread Test " + i + ": " + response);
                         Thread.Sleep(500);
                     }
                     catch (Exception ex)
                     {
-                        LogService.Instance.Error("HTTP Thread Error: " + ex.Message);
+                        Logger.Instance.Error("HTTP Thread Error: " + ex.Message);
                     }
                 }
             });
@@ -127,7 +127,7 @@ namespace AGSyncCS
                     for (int i = 1; i <= 3; i++)
                     {
                         string response = client.SendAndReceive("Simultaneous Test " + i);
-                        LogService.Instance.Info("UDP Thread Test " + i + ": " + response);
+                        Logger.Instance.Info("UDP Thread Test " + i + ": " + response);
                         Thread.Sleep(500);
                     }
                     
@@ -135,7 +135,7 @@ namespace AGSyncCS
                 }
                 catch (Exception ex)
                 {
-                    LogService.Instance.Error("UDP Thread Error: " + ex.Message);
+                    Logger.Instance.Error("UDP Thread Error: " + ex.Message);
                 }
             });
             
@@ -146,7 +146,7 @@ namespace AGSyncCS
             httpTestThread.Join();
             udpTestThread.Join();
             
-            LogService.Instance.Info("--- Simultaneous Testing Complete ---");
+            Logger.Instance.Info("--- Simultaneous Testing Complete ---");
         }
         
         private static string SendHttpRequest(string method, string url, string data)

@@ -27,8 +27,8 @@ namespace AGSyncCS
         public const int TCP_CONNECTION_TIMEOUT = 30000;
         
         // Logging Configuration
-        public const string LOG_FILE_PATH = "server.log";
-        public const LogLevel DEFAULT_LOG_LEVEL = LogLevel.Info;
+        public const string LOG_FILE_PATH = "server.log.txt";
+        public const LogLevel DEFAULT_LOG_LEVEL = LogLevel.Debug;
         public const bool ENABLE_CONSOLE_OUTPUT = true;
         public const bool ENABLE_FILE_OUTPUT = true;
         

@@ -7,16 +7,27 @@ using System.Threading;
 using System.IO;
 using SimpleJson;
 using System.Security;
+using Servers;
+using System.Diagnostics;
 
 namespace AGSyncCS
 {
     public class TcpServer {
-        public void on(CM_NewRoom cm, ref int errorCode, ref SM_NewRoom sm)
-        {
+
+        public void on(CM_Test cm, ref int errorCode, ref SM sm) {
+            Logger.Instance.Info("server get cm_test:" + cm.ToString());
+            var s = new SM_Test();
+            s.i1 = 1111;
+            s.str1 = "Hello from server.";
+            sm = s;
+        }
+        public void on(CM_NewRoom cm, ref int errorCode, ref SM sm) {
 
         }
 
+        public void on(CM_EnterRoom cm, ref int errorCode, ref SM sm) {
 
+        }
 
 
         private TcpListener listener;
@@ -52,11 +63,11 @@ namespace AGSyncCS
                 serverThread.IsBackground = true;
                 serverThread.Start();
 
-                LogService.Instance.Info(string.Format("TCP Server started on port {0}", port));
+                Logger.Instance.Info(string.Format("TCP server:{0}", port));
             }
             catch (Exception ex)
             {
-                LogService.Instance.Error("Failed to start TCP server: " + ex.Message);
+                Logger.Instance.Error("Failed to start TCP server: " + ex.Message);
                 throw;
             }
         }
@@ -79,7 +90,7 @@ namespace AGSyncCS
                     }
                     catch (Exception ex)
                     {
-                        LogService.Instance.Error("Error closing connection: " + ex.Message);
+                        Logger.Instance.Error("Error closing connection: " + ex.Message);
                     }
                 }
                 activeConnections.Clear();
@@ -97,7 +108,7 @@ namespace AGSyncCS
                 serverThread.Join(5000);
             }
 
-            LogService.Instance.Info("TCP Server stopped");
+            Logger.Instance.Info("TCP Server stopped");
         }
 
         private void ListenForClients()
@@ -113,7 +124,7 @@ namespace AGSyncCS
                     {
                         if (activeConnections.Count >= maxConnections)
                         {
-                            LogService.Instance.Warning("Maximum connections reached, rejecting new connection");
+                            Logger.Instance.Warning("Maximum connections reached, rejecting new connection");
                             client.Close();
                             continue;
                         }
@@ -127,7 +138,7 @@ namespace AGSyncCS
                         activeConnections.Add(connection);
                     }
 
-                    LogService.Instance.Info(string.Format("New TCP connection from {0} (Total: {1})", 
+                    Logger.Instance.Info(string.Format("S new C:{0} (Total: {1})", 
                         client.Client.RemoteEndPoint, activeConnections.Count));
 
                     // Start connection handler in background thread
@@ -139,13 +150,13 @@ namespace AGSyncCS
                 {
                     if (isRunning)
                     {
-                        LogService.Instance.Error("Error accepting TCP client: " + ex.Message);
+                        Logger.Instance.Error("Error accepting TCP client: " + ex.Message);
                     }
                 }
             }
         }
 
-        private void HandleConnection(TcpClientConnection connection)
+        private void HandleConnection(TcpClientConnection connection)//thread for each client
         {
             try
             {
@@ -159,7 +170,7 @@ namespace AGSyncCS
             }
             catch (Exception ex)
             {
-                LogService.Instance.Error("Error handling TCP connection: " + ex.Message);
+                Logger.Instance.Error("Error handling TCP connection: " + ex.Message);
             }
             finally
             {
@@ -169,7 +180,7 @@ namespace AGSyncCS
                     activeConnections.Remove(connection);
                 }
                 
-                LogService.Instance.Info(string.Format("TCP connection closed from {0} (Remaining: {1})", 
+                Logger.Instance.Info(string.Format("TCP connection closed from {0} (Remaining: {1})", 
                     connection.RemoteEndPoint, activeConnections.Count));
             }
         }
@@ -224,7 +235,7 @@ namespace AGSyncCS
             get { return isConnected; }
         }
 
-        public void Start()
+        public void Start()//thread for each client
         {
             try
             {
@@ -238,112 +249,121 @@ namespace AGSyncCS
                 receiveThread.IsBackground = true;
                 receiveThread.Start();
 
-                LogService.Instance.Debug(string.Format("TCP connection {0} started", remoteEndPoint));
+                Logger.Instance.Debug(string.Format("S TCP connection {0} started", remoteEndPoint));
             }
             catch (Exception ex)
             {
-                LogService.Instance.Error(string.Format("Error starting TCP connection {0}: {1}", remoteEndPoint, ex.Message));
+                Logger.Instance.Error(string.Format("Error starting TCP connection {0}: {1}", remoteEndPoint, ex.Message));
                 throw;
             }
         }
 
-        private void ReceiveLoop()
+        private void ReceiveLoop()//thread for each client
         {
             byte[] buffer = new byte[ServerConfig.BUFFER_SIZE];
             var ms = new MemoryStream(buffer);
-            var reader = new BinaryReader(ms);
+            var reader = new BinaryReader(stream);
             while (isConnected)
             {
                 try
                 {
-                    int bytesRead = stream.Read(buffer, 0, buffer.Length);
-                    if (bytesRead == 0)
-                    {
+                    ms.Position = 0;//prepare for next, network stream doest support seek, use ms instead.
+                    int bytesRead = stream.Read(buffer, 0, buffer.Length);//block
+                    if (bytesRead == 0) {
                         // Connection closed by client
                         break;
                     }
+                    while(ms.Position < bytesRead) {//if client sends 2 cm in a for-loop.
+                        int protocal = reader.ReadInt32();
+                        Logger.Instance.Log(LogLevel.Debug, "S Protocal:" + protocal + " bytesRead:" + bytesRead);
 
-                    ms.Position = 0;
-                    int protocal = reader.ReadInt32();
-                    int errorCode = ErrorCode.None;//will be sent to client
-                    int UID = 0;//Uid 放protocal之后（因为 protocal不存在uid也无必要）
+                        CM cm = Protocals.GetCM(protocal);
+                        SM sm = null;
+                        int messasgeUID = 0;
 
-                    if (protocal == Protocals.NewRoom)
-                    {
-                        UID = reader.ReadInt32();
-                        var cm = new CM_NewRoom();
-                        cm.readFrom(reader);
+                        if (cm == null) {//error or malicious
+                            Logger.Instance.Warning($"CM == null, protocal: {protocal} from {remoteEndPoint}");
+                            continue;
+                        }
+                        else {
+                            messasgeUID = reader.ReadInt32();// protocal不存在uid也无必要, so Uid 放protocal之后
+                            cm.readFrom(reader);
+                        }
 
-                        SM_NewRoom sm = null;
-                        server.on(cm, ref errorCode, ref sm);
-                        Send(protocal, errorCode, sm);
+                        int errorCode = ErrorCode.None;//will be sent to client
+                        if(protocal == Protocals.Test)
+                            server.on((CM_Test)cm, ref errorCode, ref sm);
+                        else if (protocal == Protocals.NewRoom)
+                            server.on((CM_NewRoom)cm, ref errorCode, ref sm);
+                        else if (protocal == Protocals.EnterRoom) 
+                            server.on((CM_EnterRoom) cm , ref errorCode, ref sm);
+                        Response(protocal, messasgeUID, errorCode, sm);//callback immediately
                     }
-                    else if (protocal == Protocals.EnterRoom)
-                    {
-                        var cm = new CM_EnterRoom();
-                        SM_EnterRoom sm = null;
-
-                        //lstodo
-                    }
-                    else
-                    {
-                        // Unknown protocol/malicious client, send error response
-                        // var sm = new SM();
-                        // sm.errorCode = ErrorCode.Unknown_Protocal; // or a suitable error code
-                        // Send(sm);
-                        //lstodo close client
-                        LogService.Instance.Warning($"Unknown protocol: {protocal} from {remoteEndPoint}");
-                    }
-
                 }
-                catch (Exception ex)
-                {
-                    if (isConnected)
-                    {
-                        LogService.Instance.Error(string.Format("Error receiving from {0}: {1}", remoteEndPoint, ex.Message));
+                catch (Exception ex) {
+                    if (isConnected) {
+                        Logger.Instance.Debug(string.Format("S Is C closed? Error receiving from {0}: {1}.", remoteEndPoint, ex.Message));
                     }
                     break;
                 }
             }
         }
 
-        
-        //前端不记录状态，加上后端还有push，所以protocal必须
-        public void Send(int protocal, int errorCode, SM sm)
-        {
+        public void Push(int protocal, SM sm) {
             if (!isConnected)
                 throw new InvalidOperationException("Connection is not active");
-
             try
             {
                 byte[] buffer = new byte[ServerConfig.BUFFER_SIZE];
                 var ms = new MemoryStream(buffer);
                 var writer = new BinaryWriter(stream);
                 ms.Seek(0, SeekOrigin.Begin);
-
-                writer.Write((int)MessageType.Response);
+                writer.Write((int)MessageType.Push);
                 writer.Write(protocal);
-
-                writer.Write(errorCode);//在push时无errorcode，但是push也用这套，省（个接口+推送判断）
-                if (errorCode == ErrorCode.None)
-                    sm.writeTo(writer);
-
-                lock (streamLock)
-                {
+                sm.writeTo(writer);
+                lock (streamLock) {
                     stream.Write(buffer, 0, (int)ms.Length);
                 }
-
-                LogService.Instance.Debug(string.Format("Sent to {0}: {1}", remoteEndPoint, sm.ToString()));
+                Logger.Instance.Debug(string.Format("Push to {0}: {1}", remoteEndPoint, sm.ToString()));
             }
-            catch (Exception ex)
-            {
-                LogService.Instance.Error(string.Format("Error sending to {0}: {1}", remoteEndPoint, ex.Message));
+            catch (Exception ex) {
+                Logger.Instance.Error(string.Format("Error pushing to {0}: {1}", remoteEndPoint, ex.Message));
                 throw;
             }
         }
 
-        public void Close()
-        {
+        //前端不记录状态，加上后端还有push，所以protocal必须
+        public void Response(int protocal, int messasgeUID, int errorCode, SM sm) {
+            if (!isConnected)
+                throw new InvalidOperationException("Connection is not active");
+
+            try
+            {
+                byte[] buffer = new byte[ServerConfig.BUFFER_SIZE];
+                var ms = new MemoryStream(buffer);//tmp stream
+                var writer = new BinaryWriter(ms);
+                ms.Seek(0, SeekOrigin.Begin);
+
+                writer.Write((int)MessageType.Response);
+                writer.Write(protocal);
+                writer.Write(messasgeUID);
+                writer.Write(errorCode);//在push时无errorcode，但是push也用这套，省（个接口+推送判断）
+
+                if (errorCode == ErrorCode.None)
+                    sm.writeTo(writer);
+
+                lock (streamLock) {
+                    stream.Write(buffer, 0, (int)ms.Length);
+                }
+                Logger.Instance.Debug(string.Format("S 2C {0}: {1}", remoteEndPoint, sm.ToString()));
+            }
+            catch (Exception ex) {
+                Logger.Instance.Error(string.Format("Error sending to {0}: {1}", remoteEndPoint, ex.Message));
+                throw;
+            }
+        }
+
+        public void Close() {
             isConnected = false;
 
             try
@@ -359,7 +379,7 @@ namespace AGSyncCS
             }
             catch (Exception ex)
             {
-                LogService.Instance.Error(string.Format("Error closing TCP connection {0}: {1}", remoteEndPoint, ex.Message));
+                Logger.Instance.Error(string.Format("Error closing TCP connection {0}: {1}", remoteEndPoint, ex.Message));
             }
         }
     }

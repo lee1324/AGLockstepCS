@@ -7,7 +7,7 @@ namespace AGSyncCS
     {
         public static void RunDemo()
         {
-            LogService.Instance.Info("=== UDP Server + Client Demo ===");
+            Logger.Instance.Info("=== UDP Server + Client Demo ===");
             
             // Start the UDP server in a background thread
             Thread serverThread = new Thread(() => {
@@ -28,33 +28,33 @@ namespace AGSyncCS
             try
             {
                 client.Connect("127.0.0.1", 9002);
-                LogService.Instance.Info("\n--- Synchronous Test ---");
+                Logger.Instance.Info("\n--- Synchronous Test ---");
                 string response1 = client.SendAndReceive("Hello UDP Server!");
-                LogService.Instance.Info("Response: " + response1);
+                Logger.Instance.Info("Response: " + response1);
 
-                LogService.Instance.Info("\n--- Multiple Messages Test ---");
+                Logger.Instance.Info("\n--- Multiple Messages Test ---");
                 string[] messages = { "Test 1", "Test 2", "Test 3" };
                 foreach (string msg in messages)
                 {
                     string response = client.SendAndReceive(msg);
-                    LogService.Instance.Info(string.Format("Message: {0} -> Response: {1}", msg, response));
+                    Logger.Instance.Info(string.Format("Message: {0} -> Response: {1}", msg, response));
                     Thread.Sleep(500);
                 }
 
-                LogService.Instance.Info("\n--- Async Test ---");
+                Logger.Instance.Info("\n--- Async Test ---");
                 client.SendAsync("Async message", (response) =>
                 {
-                    LogService.Instance.Info("Async response: " + response);
+                    Logger.Instance.Info("Async response: " + response);
                 });
                 Thread.Sleep(2000);
 
-                LogService.Instance.Info("\n--- Timeout Test ---");
+                Logger.Instance.Info("\n--- Timeout Test ---");
                 string timeoutResponse = client.SendAndReceive("Timeout test", 1000);
-                LogService.Instance.Info("Timeout response: " + timeoutResponse);
+                Logger.Instance.Info("Timeout response: " + timeoutResponse);
             }
             catch (Exception ex)
             {
-                LogService.Instance.Error("Error: " + ex.Message);
+                Logger.Instance.Error("Error: " + ex.Message);
             }
             finally
             {
@@ -63,7 +63,7 @@ namespace AGSyncCS
 
             // Wait for the server thread to finish
             serverThread.Join();
-            LogService.Instance.Info("=== UDP Server + Client Demo Complete ===");
+            Logger.Instance.Info("=== UDP Server + Client Demo Complete ===");
         }
     }
 } 

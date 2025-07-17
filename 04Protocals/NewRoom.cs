@@ -11,7 +11,7 @@ namespace AGSyncCS {
             userID = reader.ReadString();
         }
 
-        public override string toString() {
+        public override string ToString() {
             return "userID:" + userID;
         }
             
@@ -29,7 +29,7 @@ namespace AGSyncCS {
             roomID = reader.ReadInt32();
         }
 
-        public override string toString() {
+        public override string ToString() {
             return string.Format("roomID:" + roomID);
         }
     }
