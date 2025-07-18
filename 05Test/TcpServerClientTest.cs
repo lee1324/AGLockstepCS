@@ -65,7 +65,9 @@ namespace AGSyncCS
                             cm.str1 = string.Format("clientID:{0} j:{1}", clientId, j);
                             cm.onResponse = (s) => {
                                 var sm = (SM_Test)s;
-                                Logger.Instance.Info("Return Wrong:" + sm.ToString());
+                                if(sm.i1 - cm.i1 == 20) 
+                                    Logger.Instance.Info("C Test Correct:" + sm.ToString());
+                                else Logger.Instance.Info("C Test Wrong:" + sm.ToString());
                             };
                             client.Send(cm);
                         }
