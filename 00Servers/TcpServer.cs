@@ -121,8 +121,8 @@ namespace AGSyncCS
                         activeConnections.Add(connection);
                     }
 
-                    Logger.Instance.Info(string.Format("S new C:{0} (Total: {1})", 
-                        client.Client.RemoteEndPoint, activeConnections.Count));
+                    //Logger.Instance.Debug(string.Format("S new C:{0} (Total: {1})", 
+                    //    client.Client.RemoteEndPoint, activeConnections.Count));
 
                     // Start connection handler in background thread
                     Thread connectionThread = new Thread(() => HandleConnection(connection));

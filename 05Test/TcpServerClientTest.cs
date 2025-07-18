@@ -18,9 +18,12 @@ namespace AGSyncCS
 
             Thread.Sleep(1000);
 
+            //Test_CM_NewRoom();
+
+            Thread.Sleep(1000);
 
             // Test multiple clients
-            TestMultipleClients();
+            //TestMultipleClients();
 
             Thread.Sleep(1000);
 
@@ -35,10 +38,10 @@ namespace AGSyncCS
         {
             var cm = new CM_Test();
             cm.i1 = 1001;
-            cm.str1 = "Hello from client.";
+            cm.str1 = "CM_Test Hello from client.";
             cm.onResponse = (response) => {
                 var sm = (SM_Test)response;
-                Logger.Instance.Info("sm_test:" + sm.ToString());
+                Logger.Instance.Info("response() SM_TEST:" + sm.ToString());
             };
             cm.send();
         }
@@ -88,7 +91,44 @@ namespace AGSyncCS
         }
         
        
-        
+        private static void Test_CM_NewRoom()
+        {
+            Logger.Instance.Info("--- Testing Multiple TCP Clients ---");
+             for (int i = 0; i < Config.MaxRooms + 10 ; ++i)
+            {
+                int clientId = i;
+                Thread clientThread = new Thread(() =>
+                {
+                    try
+                    {
+                        TcpClientWrapper client = new TcpClientWrapper();
+                        client.Connect(Config.TCP_HOST, Config.TCP_SERVER_PORT);
+
+                        
+                        var cm = new CM_NewRoom();
+                        cm.userID = "autoTestUserID:" + i;
+                        cm.onResponse = (s) => {
+                            Logger.Instance.Debug("C NewRoom Response:" + s.ToString());
+                        };
+                        client.Send(cm);
+                        
+                        //client.Close();//lstodo close will cause exception(onServer?)
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Instance.Error(string.Format("ClientId {0} Error: {1}", clientId, ex.Message));
+                    }
+                });
+                clientThread.IsBackground = true;
+                clientThread.Start();
+                Thread.Sleep(1000);
+
+            }
+            
+            // Wait for all clients to complete
+            Thread.Sleep(3000);
+        }
+            
         private static void TestConnectionLimits()
         {
             Logger.Instance.Info("--- Testing Connection Limits ---");

@@ -12,10 +12,8 @@ using System.Net.Configuration;
 namespace AGSyncCS
 {
 
-    public partial class CM//extend cm for client's usage
-    {
+    public partial class CM {//extend cm for client's usage
         public Action<SM> onResponse = null;
-
         static TcpClientWrapper _Instance = null;
         public static void InitConnection() {
             if (_Instance == null) {
@@ -42,8 +40,7 @@ namespace AGSyncCS
         private Thread receiveThread;
         private readonly object streamLock = new object();
 
-        public TcpClientWrapper(int timeout = 30000)
-        {
+        public TcpClientWrapper(int timeout = 30000) {
             this.timeout = timeout;
         }
 
@@ -54,7 +51,7 @@ namespace AGSyncCS
 
                 client = new System.Net.Sockets.TcpClient();
                 client.Connect(serverAddress, serverPort);
-                Logger.Instance.Debug(string.Format("Connectting to TCP server {0}:{1}", serverAddress, serverPort));
+                //Logger.Instance.Debug(string.Format("Connectting to TCP server {0}:{1}", serverAddress, serverPort));
                 stream = client.GetStream();
                 isConnected = true;
 
@@ -74,6 +71,7 @@ namespace AGSyncCS
         Dictionary<int, Action<SM>> _listeners = new Dictionary<int, Action<SM>>();
         public void Send(CM cm)
         {
+            Logger.Instance.Debug("C Send() " + cm.ToString());
             ++GlobalUID;
             if (!isConnected)
                 throw new InvalidOperationException("Not connected to server");
@@ -85,8 +83,7 @@ namespace AGSyncCS
                     var writer = new BinaryWriter(ms);
 
                     int protocal = Protocals.GetProtocal(cm); 
-                    if (protocal == Protocals.None)
-                    {
+                    if (protocal == Protocals.None) {
                         Logger.Instance.Error(string.Format("Unregistered protocal: {0}", cm.GetType()));
                         throw new InvalidOperationException("Unregistered protocal");
                     }
@@ -97,14 +94,10 @@ namespace AGSyncCS
                         cm.writeTo(writer);
 
                         _listeners[GlobalUID] = cm.onResponse;
-                        Logger.Instance.Debug("C netStream Write once, ms.Position:" + ms.Position);
                         stream.Write(sendBuffer, 0, (int)ms.Position);
-
                         stream.Flush();//加这行是否能立即发送？未确定（C连发两cm，后端会收到一个stream中，加不加这行都是)
                     }
                 }
-
-                Logger.Instance.Debug(string.Format("C Send CM:{0}", cm.ToString()));
             }
             catch (Exception ex)
             {
@@ -121,6 +114,7 @@ namespace AGSyncCS
             byte[] buffer = new byte[Config.BUFFER_SIZE];
             while (isConnected) {
                 try {
+                    //unknow bug, bytesRead = 4096(max size), why?
                     int bytesRead = stream.Read(buffer, 0, buffer.Length);//block且一次只读一个sm（不存在并发，所以下面不锁
 
                     if (bytesRead == 0) { // Connection closed by server
@@ -130,7 +124,7 @@ namespace AGSyncCS
                     var reader = new BinaryReader(stream);
                     var iMessageType = reader.ReadInt32();
                     var protocal = reader.ReadInt32();
-                    //Logger.Instance.Log(LogLevel.Debug, "C iMessageType:" + iMessageType + " protocal:" + protocal);
+                    Logger.Instance.Log(LogLevel.Debug, "C iMessageType:" + iMessageType + " protocal:" + protocal);
 
                     if (iMessageType == (int)eMessageType.Push) ;//lstodo
                     else if (iMessageType == (int)eMessageType.Response)
@@ -139,7 +133,7 @@ namespace AGSyncCS
                         var errorCode = reader.ReadInt32();
 
                         Logger.Instance.Log(LogLevel.Debug, string.Format("C protocal:{0} " +
-                            "msgUID:{1} errorCode:{2}",
+                            "messageUID:{1} errorCode:{2}",
                             protocal, msgUID, errorCode));
 
                         if (errorCode == ErrorCode.None) {
@@ -158,7 +152,7 @@ namespace AGSyncCS
                             }
                         }
                         else {//lstodo errorCode
-                            Logger.Instance.Info(string.Format("lstodo cm errorcode {0}", errorCode));
+                            Logger.Instance.Warning(string.Format("lstodo cm errorcode {0}", errorCode));
                         }
                     }
                     else Logger.Instance.Info("Wrong MessageType From Server:" + iMessageType);

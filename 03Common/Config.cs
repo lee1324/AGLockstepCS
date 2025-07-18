@@ -3,8 +3,10 @@ using System.Runtime.InteropServices;
 
 namespace AGSyncCS
 {
-    public static class Config
+    public static partial class Config
     {
+        public static int MaxPlayersPerRoom = 4;
+        public static int MaxRooms = 10;
         public const string TCP_HOST = "127.0.0.1";
         //public const string TCP_HOST = "47.115.227.169";
         //public const string TCP_HOST = "192.168.6.222";//mac mini 5G
@@ -26,7 +28,7 @@ namespace AGSyncCS
         public const int TCP_CONNECTION_TIMEOUT = 30000;
         
         // Logging Configuration
-        public const string LOG_FILE_PATH = "server.log.txt";
+        public const string LOG_FILE_PATH = "C:\\Users\\ls\\Documents\\AGLockstepCS\\server.log";
         public const LogLevel DEFAULT_LOG_LEVEL = LogLevel.Debug;
         public const bool ENABLE_CONSOLE_OUTPUT = true;
         public const bool ENABLE_FILE_OUTPUT = true;
@@ -38,7 +40,9 @@ namespace AGSyncCS
         // Network Configuration
         public const int BUFFER_SIZE = 4096;
         public const int SOCKET_TIMEOUT = 30000;
-        
+
+        public const float SyncFPS = .3f;//30
+
         // Get formatted URLs for logging
         public static string GetHttpServerUrl()
         {

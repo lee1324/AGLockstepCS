@@ -61,18 +61,16 @@ namespace AGSyncCS {
             }
         }
 
-        private void ReceiveLoop()//thread for each client
+        private void ReceiveLoop()//thread for each client, no need to lock
         {
             byte[] buffer = new byte[Config.BUFFER_SIZE];
             var ms = new MemoryStream(buffer);
             var reader = new BinaryReader(ms);
-            while (isConnected)
-            {
-                try
-                {
+            while (isConnected) {
+                try {
                     ms.Position = 0;//prepare for next, network stream doest support seek, use ms instead.
                     int bytesRead = stream.Read(buffer, 0, buffer.Length);//block
-                    Logger.Instance.Debug(string.Format("S Read from {0}, bytesRead: {1}", remoteEndPoint, bytesRead));
+                    //Logger.Instance.Debug(string.Format("S Read from {0}, bytesRead: {1}", remoteEndPoint, bytesRead));
                     if (bytesRead == 0) {
                         Logger.Instance.Info("S Connection closed by client: " + remoteEndPoint);
                         break;
@@ -95,7 +93,7 @@ namespace AGSyncCS {
 
                         int errorCode = ErrorCode.None;//will be sent to client
                         SM response = null;
-                        dispatch(protocal, cm, ref response);//dispatch to specific on method
+                        dispatch(protocal, cm, ref errorCode, ref response);//dispatch to specific on method
                         Response(protocal, messasgeUID, errorCode, response);//callback immediately(sync, async is not now supported)
                     }
                 }
@@ -137,25 +135,29 @@ namespace AGSyncCS {
             if (!isConnected)
                 throw new InvalidOperationException("Connection is not active");
 
-            try
-            {
-                byte[] buffer = new byte[Config.BUFFER_SIZE];
-                var ms = new MemoryStream(buffer);//tmp stream
-                var writer = new BinaryWriter(ms);
-                ms.Seek(0, SeekOrigin.Begin);
-
-                writer.Write((int)eMessageType.Response);
-                writer.Write(protocal);
-                writer.Write(messasgeUID);
-                writer.Write(errorCode);//在push时无errorcode，但是push也用这套，省（个接口+推送判断）
-
-                if (errorCode == ErrorCode.None)
-                    sm.writeTo(writer);
-
+            try {
                 lock (streamLock) {
-                    stream.Write(buffer, 0, (int)ms.Length);
+
+                    byte[] buffer = new byte[Config.BUFFER_SIZE];
+                    var ms = new MemoryStream(buffer);//tmp stream
+                    var writer = new BinaryWriter(ms);
+                    ms.Seek(0, SeekOrigin.Begin);
+
+                    writer.Write((int)eMessageType.Response);
+                    writer.Write(protocal);
+                    writer.Write(messasgeUID);
+                    writer.Write(errorCode);//在push时无errorcode，但是push也用这套，省（个接口+推送判断）
+
+                    if (errorCode == ErrorCode.None){
+                        if (sm == null) Logger.Instance.Warning("errorCode or sm, U forgot 2 set one of 'em!!!");
+                        else {
+                            sm.writeTo(writer);
+                            stream.Write(buffer, 0, (int)ms.Length);
+                            Logger.Instance.Debug(string.Format("S 2C {0}: {1}", remoteEndPoint, sm.ToString()));
+                        }
+                    }
                 }
-                Logger.Instance.Debug(string.Format("S 2C {0}: {1}", remoteEndPoint, sm.ToString()));
+               
             }
             catch (Exception ex) {
                 Logger.Instance.Error(string.Format("Error sending to {0}: {1}", remoteEndPoint, ex.Message));

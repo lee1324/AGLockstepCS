@@ -3,6 +3,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
+using AGSyncCS;
 using SimpleJson;
 
 namespace AGSyncCS
@@ -11,6 +12,9 @@ namespace AGSyncCS
     {
         static void Main(string[] args)
         {
+            RoomsManager.Instance.init();
+
+
             // Toggle to enable/disable UDP server
             bool enableUdpServer = false; // Set to false to disable UDP server
             bool startTcpServer = true; // Set to false to skip starting TCP server
