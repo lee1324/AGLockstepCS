@@ -112,16 +112,17 @@ namespace AGSyncCS
         private void ReceiveLoop()
         {
             byte[] buffer = new byte[Config.BUFFER_SIZE];
+            var ms = new MemoryStream(buffer);
             while (isConnected) {
                 try {
-                    //unknow bug, bytesRead = 4096(max size), why?
+                    //bytesRead = 4096(max size), why?
                     int bytesRead = stream.Read(buffer, 0, buffer.Length);//block且一次只读一个sm（不存在并发，所以下面不锁
 
                     if (bytesRead == 0) { // Connection closed by server
-                        Logger.Instance.Info("Server closed the connection");
+                        Logger.Instance.Info("Server call Close() or ShutDown()");
                         break;
                     }
-                    var reader = new BinaryReader(stream);
+                    var reader = new BinaryReader(ms);
                     var iMessageType = reader.ReadInt32();
                     var protocal = reader.ReadInt32();
                     Logger.Instance.Log(LogLevel.Debug, "C iMessageType:" + iMessageType + " protocal:" + protocal);
