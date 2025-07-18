@@ -17,8 +17,8 @@ namespace AGSyncCS
         public void on(CM_Test cm, ref int errorCode, ref SM sm) {
             Logger.Instance.Info("server get cm_test:" + cm.ToString());
             var s = new SM_Test();
-            s.i1 = 1111;
-            s.str1 = "Hello from server.";
+            s.i1 = cm.i1 + 20;
+            s.str1 = "sm.str1 from server:" + cm.str1;
             sm = s;
         }
         public void on(CM_NewRoom cm, ref int errorCode, ref SM sm) {
@@ -262,20 +262,21 @@ namespace AGSyncCS
         {
             byte[] buffer = new byte[ServerConfig.BUFFER_SIZE];
             var ms = new MemoryStream(buffer);
-            var reader = new BinaryReader(stream);
+            var reader = new BinaryReader(ms);
             while (isConnected)
             {
                 try
                 {
                     ms.Position = 0;//prepare for next, network stream doest support seek, use ms instead.
                     int bytesRead = stream.Read(buffer, 0, buffer.Length);//block
+                    Logger.Instance.Debug(string.Format("S Read from {0}, bytesRead: {1}", remoteEndPoint, bytesRead));
                     if (bytesRead == 0) {
-                        // Connection closed by client
+                        Logger.Instance.Info("S Connection closed by client: " + remoteEndPoint);
                         break;
                     }
-                    while(ms.Position < bytesRead) {//if client sends 2 cm in a for-loop.
+
+                    while (ms.Position < bytesRead) {//if client sends 2 cm in a for-loop.
                         int protocal = reader.ReadInt32();
-                        Logger.Instance.Log(LogLevel.Debug, "S Protocal:" + protocal + " bytesRead:" + bytesRead);
 
                         CM cm = Protocals.GetCM(protocal);
                         SM sm = null;
@@ -302,6 +303,7 @@ namespace AGSyncCS
                 }
                 catch (Exception ex) {
                     if (isConnected) {
+                        //Dont READ or writer networkstream.Position, otherwise it will throw exception
                         Logger.Instance.Debug(string.Format("S Is C closed? Error receiving from {0}: {1}.", remoteEndPoint, ex.Message));
                     }
                     break;

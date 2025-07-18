@@ -85,27 +85,26 @@ namespace AGSyncCS
             {
                 lock (streamLock)
                 {
-                    using (var ms = new MemoryStream())
+                    var ms = new MemoryStream(sendBuffer);
+                    var writer = new BinaryWriter(ms);
+
+                    int protocal = Protocals.GetProtocal(cm); 
+                    if (protocal == Protocals.None)
                     {
-                        var writer = new BinaryWriter(ms);
+                        Logger.Instance.Error(string.Format("Unregistered protocal: {0}", cm.GetType()));
+                        throw new InvalidOperationException("Unregistered protocal");
+                    }
+                    else
+                    {
+                        writer.Write(protocal);
+                        writer.Write(GlobalUID);
+                        cm.writeTo(writer);
 
-                        int protocal = Protocals.GetProtocal(cm); 
-                        if (protocal == Protocals.None)
-                        {
-                            Logger.Instance.Error(string.Format("Unregistered protocal: {0}", cm.GetType()));
-                            throw new InvalidOperationException("Unregistered protocal");
-                        }
-                        else
-                        {
-                            writer.Write(protocal);
-                            writer.Write(GlobalUID);
-                            cm.writeTo(writer);
+                        _listeners[GlobalUID] = cm.onResponse;
+                        Logger.Instance.Debug("C netStream Write once, ms.Position:" + ms.Position);
+                        stream.Write(sendBuffer, 0, (int)ms.Position);
 
-                            _listeners[GlobalUID] = cm.onResponse;
-                            Logger.Instance.Debug("C netStream Write once, ms.Position:" + ms.Position);
-                            byte[] data = ms.ToArray();
-                            stream.Write(data, 0, data.Length);
-                        }
+                        stream.Flush();//加这行是否能立即发送？未确定（C连发两cm，后端会收到一个stream中，加不加这行都是)
                     }
                 }
 

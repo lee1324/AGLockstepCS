@@ -18,10 +18,6 @@ namespace AGSyncCS
 
             Thread.Sleep(1000);
 
-            TestSingleClient();
-
-            Thread.Sleep(1000);
-
 
             // Test multiple clients
             TestMultipleClients();
@@ -52,7 +48,7 @@ namespace AGSyncCS
             Logger.Instance.Info("--- Testing Multiple TCP Clients ---");
             
             // Start multiple clients simultaneously
-            for (int i = 1; i <= 3; i++)
+            for (int i = 1; i <= 5; i++)
             {
                 int clientId = i;
                 Thread clientThread = new Thread(() =>
@@ -62,14 +58,14 @@ namespace AGSyncCS
                         TcpClientWrapper client = new TcpClientWrapper();
                         client.Connect(ServerConfig.TCP_SERVER_ADDRESS, ServerConfig.TCP_SERVER_PORT);
                         
-                        for (int j = 1; j <= 5; j++)
+                        for (int j = 1; j <= 2; j++)
                         {
                             var cm = new CM_Test();
-                            cm.i1 = j;
+                            cm.i1 = 10*i + j;
                             cm.str1 = string.Format("clientID:{0} j:{1}", clientId, j);
                             cm.onResponse = (s) => {
                                 var sm = (SM_Test)s;
-                                Logger.Instance.Info("C " + sm.ToString());
+                                Logger.Instance.Info("Return Wrong:" + sm.ToString());
                             };
                             client.Send(cm);
                         }
