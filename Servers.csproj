@@ -5,6 +5,7 @@
     <TargetFramework>net4.0</TargetFramework>
     <AssemblyName>Servers</AssemblyName>
     <RootNamespace>Servers</RootNamespace>
+    <Platforms>AnyCPU;x64;ARM64;x86</Platforms>
   </PropertyGroup>
 
 </Project> 
