@@ -11,6 +11,7 @@ namespace AGSyncCS
         {
             Logger.Instance.Info("=== TCP Server & Client Test ===");
 
+            CM.InitConnection();
             // Give server a moment to ensure it's ready
             Thread.Sleep(1000);
 
@@ -56,7 +57,7 @@ namespace AGSyncCS
                     try
                     {
                         TcpClientWrapper client = new TcpClientWrapper();
-                        client.Connect(ServerConfig.TCP_SERVER_ADDRESS, ServerConfig.TCP_SERVER_PORT);
+                        client.Connect(Config.TCP_HOST, Config.TCP_SERVER_PORT);
                         
                         for (int j = 1; j <= 2; j++)
                         {
@@ -102,12 +103,12 @@ namespace AGSyncCS
                     try
                     {
                         TcpClientWrapper client = new TcpClientWrapper();
-                        client.Connect(ServerConfig.TCP_SERVER_ADDRESS, ServerConfig.TCP_SERVER_PORT);
+                        client.Connect(Config.TCP_HOST, Config.TCP_SERVER_PORT);
                         
                         Logger.Instance.Info(string.Format("Connection {0} established successfully", clientId));
                         
                         // Keep connection alive briefly
-                        Thread.Sleep(ServerConfig.TEST_DELAY_MS);
+                        Thread.Sleep(Config.TEST_DELAY_MS);
                         
                         client.Close();
                     }
@@ -119,7 +120,7 @@ namespace AGSyncCS
                 clientThread.IsBackground = true;
                 clientThread.Start();
                 
-                Thread.Sleep(ServerConfig.TEST_DELAY_MS); // Small delay between connection attempts
+                Thread.Sleep(Config.TEST_DELAY_MS); // Small delay between connection attempts
             }
             
             // Wait for all connection attempts to complete

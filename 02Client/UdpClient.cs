@@ -58,7 +58,7 @@ namespace AGSyncCS
             try
             {
                 udpClient.Client.ReceiveTimeout = timeoutMs;
-                IPEndPoint remoteEP = new IPEndPoint(IPAddress.Parse(ServerConfig.ANY_ADDRESS), 0);
+                IPEndPoint remoteEP = new IPEndPoint(IPAddress.Parse(Config.ANY_ADDRESS), 0);
                 byte[] responseData = udpClient.Receive(ref remoteEP);
                 string response = Encoding.UTF8.GetString(responseData);
                 Logger.Instance.Info(string.Format("Received from {0}: {1}", remoteEP, response));

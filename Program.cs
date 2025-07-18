@@ -13,25 +13,28 @@ namespace AGSyncCS
         {
             // Toggle to enable/disable UDP server
             bool enableUdpServer = false; // Set to false to disable UDP server
+            bool startTcpServer = true; // Set to false to skip starting TCP server
             // Start the logging service
             Logger.Instance.Start();
             
-            // Start TCP server in a background thread
-            Thread tcpServerThread = new Thread(() => {
-                TcpServer tcpServer = new TcpServer(ServerConfig.TCP_SERVER_PORT, 
-                    ServerConfig.TCP_MAX_CONNECTIONS, ServerConfig.TCP_CONNECTION_TIMEOUT);
-                tcpServer.Start();
+            if(startTcpServer){
+                // Start TCP server in a background thread
+                Thread tcpServerThread = new Thread(() => {
+                    TcpServer tcpServer = new TcpServer(Config.TCP_SERVER_PORT, 
+                        Config.TCP_MAX_CONNECTIONS, Config.TCP_CONNECTION_TIMEOUT);
+                    tcpServer.Start();
                 
-                // Keep TCP server running
-                while (true) Thread.Sleep(1000);
-            });
-            tcpServerThread.IsBackground = true;
-            tcpServerThread.Start();
+                    // Keep TCP server running
+                    while (true) Thread.Sleep(1000);
+                });
+                tcpServerThread.IsBackground = true;
+                tcpServerThread.Start();
+            }
             
             // Start UDP server in a background thread (toggle)
             if (enableUdpServer) {
                 Thread udpServerThread = new Thread(() => {
-                    UdpServer udpServer = new UdpServer(ServerConfig.UDP_SERVER_PORT, ServerConfig.UDP_ECHO_ENABLED);
+                    UdpServer udpServer = new UdpServer(Config.UDP_SERVER_PORT, Config.UDP_ECHO_ENABLED);
                     udpServer.Start();
                     
                     // Keep UDP server running
@@ -40,7 +43,7 @@ namespace AGSyncCS
 
                 udpServerThread.IsBackground = true;
                 udpServerThread.Start();
-                Logger.Instance.Info(string.Format("UDP server started on port {0}", ServerConfig.UDP_SERVER_PORT));
+                Logger.Instance.Info(string.Format("UDP server started on port {0}", Config.UDP_SERVER_PORT));
             }
             
             // Give servers a moment to start

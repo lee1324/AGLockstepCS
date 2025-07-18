@@ -260,7 +260,7 @@ namespace AGSyncCS
 
         private void ReceiveLoop()//thread for each client
         {
-            byte[] buffer = new byte[ServerConfig.BUFFER_SIZE];
+            byte[] buffer = new byte[Config.BUFFER_SIZE];
             var ms = new MemoryStream(buffer);
             var reader = new BinaryReader(ms);
             while (isConnected)
@@ -316,7 +316,7 @@ namespace AGSyncCS
                 throw new InvalidOperationException("Connection is not active");
             try
             {
-                byte[] buffer = new byte[ServerConfig.BUFFER_SIZE];
+                byte[] buffer = new byte[Config.BUFFER_SIZE];
                 var ms = new MemoryStream(buffer);
                 var writer = new BinaryWriter(stream);
                 ms.Seek(0, SeekOrigin.Begin);
@@ -341,7 +341,7 @@ namespace AGSyncCS
 
             try
             {
-                byte[] buffer = new byte[ServerConfig.BUFFER_SIZE];
+                byte[] buffer = new byte[Config.BUFFER_SIZE];
                 var ms = new MemoryStream(buffer);//tmp stream
                 var writer = new BinaryWriter(ms);
                 ms.Seek(0, SeekOrigin.Begin);

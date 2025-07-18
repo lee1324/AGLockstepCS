@@ -50,7 +50,7 @@ namespace AGSyncCS
 
         private void ListenLoop()
         {
-            IPEndPoint remoteEP = new IPEndPoint(IPAddress.Parse(ServerConfig.ANY_ADDRESS), 0);
+            IPEndPoint remoteEP = new IPEndPoint(IPAddress.Parse(Config.ANY_ADDRESS), 0);
             while (isRunning)
             {
                 try

@@ -31,10 +31,10 @@ namespace AGSyncCS
 
         public Logger()
         {
-            logFilePath = ServerConfig.LOG_FILE_PATH;
-            minimumLevel = ServerConfig.DEFAULT_LOG_LEVEL;
-            enableConsoleOutput = ServerConfig.ENABLE_CONSOLE_OUTPUT;
-            enableFileOutput = ServerConfig.ENABLE_FILE_OUTPUT;
+            logFilePath = Config.LOG_FILE_PATH;
+            minimumLevel = Config.DEFAULT_LOG_LEVEL;
+            enableConsoleOutput = Config.ENABLE_CONSOLE_OUTPUT;
+            enableFileOutput = Config.ENABLE_FILE_OUTPUT;
             logQueue = new Queue<LogEntry>();
             isRunning = false;
         }

@@ -16,28 +16,23 @@ namespace AGSyncCS
     {
         public Action<SM> onResponse = null;
 
+        static TcpClientWrapper _Instance = null;
+        public static void InitConnection() {
+            if (_Instance == null) {
+                _Instance = new TcpClientWrapper();
+                Logger.Instance.Debug("C TcpClientWrapper InitConnection IP:" + Config.TCP_HOST
+                     + ":" + Config.TCP_SERVER_PORT);
+                _Instance.Connect(Config.TCP_HOST, Config.TCP_SERVER_PORT);
+            }
+        }
+
         public void send() {
-            TcpClientWrapper.Instance.Send(this);
+            _Instance.Send(this);
         }
     }
   
     internal class TcpClientWrapper
     {
-        private static TcpClientWrapper _Instance = null;
-        /// <summary>
-        /// 组队服，长连
-        /// </summary>
-        public static TcpClientWrapper Instance {
-            get {
-                if (_Instance == null) {
-                    _Instance = new TcpClientWrapper();
-                    _Instance.Connect(ServerConfig.TCP_SERVER_ADDRESS, ServerConfig.TCP_SERVER_PORT);
-                }
-                return _Instance;
-            }
-        }
-
-
         private System.Net.Sockets.TcpClient client;
         private NetworkStream stream;
         private bool isConnected;
@@ -59,6 +54,7 @@ namespace AGSyncCS
 
                 client = new System.Net.Sockets.TcpClient();
                 client.Connect(serverAddress, serverPort);
+                Logger.Instance.Debug(string.Format("Connectting to TCP server {0}:{1}", serverAddress, serverPort));
                 stream = client.GetStream();
                 isConnected = true;
 
@@ -74,7 +70,7 @@ namespace AGSyncCS
             }
         }
 
-        byte[] sendBuffer = new byte[ServerConfig.BUFFER_SIZE];
+        byte[] sendBuffer = new byte[Config.BUFFER_SIZE];
         Dictionary<int, Action<SM>> _listeners = new Dictionary<int, Action<SM>>();
         public void Send(CM cm)
         {
@@ -122,7 +118,7 @@ namespace AGSyncCS
         //前端发的（同一protocol会发很多个），据msguid设置监听
         private void ReceiveLoop()
         {
-            byte[] buffer = new byte[ServerConfig.BUFFER_SIZE];
+            byte[] buffer = new byte[Config.BUFFER_SIZE];
             while (isConnected) {
                 try {
                     int bytesRead = stream.Read(buffer, 0, buffer.Length);//block且一次只读一个sm（不存在并发，所以下面不锁

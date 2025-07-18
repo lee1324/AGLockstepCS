@@ -26,28 +26,28 @@ namespace AGSyncCS
         
         private static void TestHttpServer()
         {
-            Logger.Instance.Info(string.Format("--- Testing HTTP Server (Port {0}) ---", ServerConfig.HTTP_SERVER_PORT));
+            Logger.Instance.Info(string.Format("--- Testing HTTP Server (Port {0}) ---", Config.HTTP_SERVER_PORT));
             
             try
             {
                 // Test 1: Status endpoint
                 Logger.Instance.Info("Test 1: HTTP Status Endpoint");
-                string statusResponse = SendHttpRequest("GET", ServerConfig.GetHttpServerUrl() + "/api/status", null);
+                string statusResponse = SendHttpRequest("GET", Config.GetHttpServerUrl() + "/api/status", null);
                 Logger.Instance.Info("Status Response: " + statusResponse);
                 
                 // Test 2: Echo endpoint
                 Logger.Instance.Info("Test 2: HTTP Echo Endpoint");
-                string echoResponse = SendHttpRequest("POST", ServerConfig.GetHttpServerUrl() + "/api/echo", "Hello from HTTP test!");
+                string echoResponse = SendHttpRequest("POST", Config.GetHttpServerUrl() + "/api/echo", "Hello from HTTP test!");
                 Logger.Instance.Info("Echo Response: " + echoResponse);
                 
                 // Test 3: Main page
                 Logger.Instance.Info("Test 3: HTTP Main Page");
-                string mainPageResponse = SendHttpRequest("GET", ServerConfig.GetHttpServerUrl() + "/", null);
+                string mainPageResponse = SendHttpRequest("GET", Config.GetHttpServerUrl() + "/", null);
                 Logger.Instance.Info("Main Page Response Length: " + mainPageResponse.Length + " characters");
                 
                 // Test 4: 404 endpoint
                 Logger.Instance.Info("Test 4: HTTP 404 Endpoint");
-                string notFoundResponse = SendHttpRequest("GET", ServerConfig.GetHttpServerUrl() + "/nonexistent", null);
+                string notFoundResponse = SendHttpRequest("GET", Config.GetHttpServerUrl() + "/nonexistent", null);
                 Logger.Instance.Info("404 Response: " + notFoundResponse);
                 
             }
@@ -59,12 +59,12 @@ namespace AGSyncCS
         
         private static void TestUdpServer()
         {
-            Logger.Instance.Info(string.Format("--- Testing UDP Server (Port {0}) ---", ServerConfig.UDP_SERVER_PORT));
+            Logger.Instance.Info(string.Format("--- Testing UDP Server (Port {0}) ---", Config.UDP_SERVER_PORT));
             
             try
             {
                 UdpClientWrapper client = new UdpClientWrapper();
-                client.Connect(ServerConfig.LOCALHOST, ServerConfig.UDP_SERVER_PORT);
+                client.Connect(Config.LOCALHOST, Config.UDP_SERVER_PORT);
                 
                 // Test 1: Simple message
                 Logger.Instance.Info("Test 1: UDP Simple Message");
@@ -107,7 +107,7 @@ namespace AGSyncCS
                 {
                     try
                     {
-                        string response = SendHttpRequest("GET", ServerConfig.GetHttpServerUrl() + "/api/status", null);
+                        string response = SendHttpRequest("GET", Config.GetHttpServerUrl() + "/api/status", null);
                         Logger.Instance.Info("HTTP Thread Test " + i + ": " + response);
                         Thread.Sleep(500);
                     }
@@ -122,7 +122,7 @@ namespace AGSyncCS
                 try
                 {
                     UdpClientWrapper client = new UdpClientWrapper();
-                    client.Connect(ServerConfig.LOCALHOST, ServerConfig.UDP_SERVER_PORT);
+                    client.Connect(Config.LOCALHOST, Config.UDP_SERVER_PORT);
                     
                     for (int i = 1; i <= 3; i++)
                     {
