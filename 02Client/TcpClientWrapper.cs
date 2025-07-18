@@ -132,8 +132,8 @@ namespace AGSyncCS
                     var protocal = reader.ReadInt32();
                     //Logger.Instance.Log(LogLevel.Debug, "C iMessageType:" + iMessageType + " protocal:" + protocal);
 
-                    if (iMessageType == (int)MessageType.Push) ;//lstodo
-                    else if (iMessageType == (int)MessageType.Response)
+                    if (iMessageType == (int)eMessageType.Push) ;//lstodo
+                    else if (iMessageType == (int)eMessageType.Response)
                     {
                         var msgUID = reader.ReadInt32();
                         var errorCode = reader.ReadInt32();

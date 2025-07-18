@@ -5,9 +5,9 @@ namespace AGSyncCS
 {
     public static class Config
     {
-        //public const string TCP_HOST = "127.0.0.1";
+        public const string TCP_HOST = "127.0.0.1";
         //public const string TCP_HOST = "47.115.227.169";
-        public const string TCP_HOST = "192.168.6.222";//mac mini 5G
+        //public const string TCP_HOST = "192.168.6.222";//mac mini 5G
         // Server IP Addresses
         public const string LOCALHOST = "127.0.0.1";
         public const string ANY_ADDRESS = "0.0.0.0";
