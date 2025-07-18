@@ -12,7 +12,8 @@ namespace AGSyncCS
     {
         static void Main(string[] args)
         {
-            RoomsManager.Instance.init();
+            
+            //RoomsManager.Instance.init(); no more need in local wifi
 
 
             // Toggle to enable/disable UDP server
@@ -34,6 +35,11 @@ namespace AGSyncCS
                 tcpServerThread.IsBackground = true;
                 tcpServerThread.Start();
             }
+
+
+
+
+
             
             // Start UDP server in a background thread (toggle)
             if (enableUdpServer) {

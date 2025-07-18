@@ -4,9 +4,13 @@ namespace AGSyncCS {
 
     public class CM_EnterRoom : CM
     {
-        public string userID;
-        public string userName;
-        public int roomID;//toom to enter
+        //for remote network
+        public string userID = "";
+        public string userName = "";
+        public int roomID = 0;//toom to enter
+
+        //local network
+        public string memberIP = "";//local IP of the user, used to connect to the room
 
 
         public override void writeTo(BinaryWriter writer)
@@ -14,12 +18,16 @@ namespace AGSyncCS {
             writer.Write(userID);
             writer.Write(userName);
             writer.Write(roomID);
+
+            writer.Write(memberIP);
         }
         public override void readFrom(BinaryReader reader)
         {
             userID = reader.ReadString();
             userName = reader.ReadString();
             roomID = reader.ReadInt32();
+
+            memberIP = reader.ReadString();
         }
     }
 

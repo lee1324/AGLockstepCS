@@ -10,28 +10,65 @@ namespace AGSyncCS
         {
             Logger.Instance.Info("=== TCP Server & Client Test ===");
 
-            CM.InitConnection();
             // Give server a moment to ensure it's ready
             Thread.Sleep(1000);
+            Test_InLocalWifi();
 
-            TestSingleClient();
+            //TestSingleClient();
 
-            Thread.Sleep(1000);
+            //Thread.Sleep(1000);
 
             //Test_CM_NewRoom();
 
-            Thread.Sleep(1000);
+            //Thread.Sleep(1000);
 
             // Test multiple clients
             //TestMultipleClients();
 
-            Thread.Sleep(1000);
+            //Thread.Sleep(1000);
 
             // Test connection limits
             //TestConnectionLimits();
 
-            Thread.Sleep(1000);
+            //Thread.Sleep(1000);
             Logger.Instance.Info("=== TCP Server & Client Test Complete ===");
+        }
+
+         private static void Test_InLocalWifi()
+         {
+            Logger.Instance.Info("--- Testing Test_InLocalWifi---");
+
+            var localClients = new TcpClientWrapper[Config.MaxPlayersPerRoom];//1st as owner
+            for (int i = 0; i < localClients.Length; i++) {
+                Thread clientThread = new Thread(() => {
+                    localClients[i] = new TcpClientWrapper();
+                    localClients[i].Connect(Config.TCP_HOST, Config.TCP_SERVER_PORT);
+                });
+                clientThread.IsBackground = true;
+                clientThread.Start();
+            }
+            Thread.Sleep(1000);
+
+             for (int i = 0; i < Config.MaxPlayersPerRoom; ++i)
+             {
+                 int clientId = i;
+                 
+                 try {
+                     TcpClientWrapper client = localClients[4]; ;
+                         
+                     var cm = new CM_EnterRoom();
+                     cm.userID = "autoTestUserID:" + i;
+                     cm.onResponse = (s) => {
+                         Logger.Instance.Debug("C NewRoom Response:" + s.ToString());
+                     };
+                     client.Send(cm);
+                 }
+                 catch (Exception ex) {
+                     Logger.Instance.Error(string.Format("ClientId {0} Error: {1}", clientId, ex.Message));
+                 }
+           
+         
+             }
         }
         
         private static void TestSingleClient()

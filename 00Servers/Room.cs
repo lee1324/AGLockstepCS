@@ -8,12 +8,14 @@ using System.Text;
 namespace AGSyncCS {
 
     public partial class Room {
-        public int ID;//id(x), be set in roomsManager
+        public string ID;
         /// <summary>
         /// [0] -> owner
         /// </summary>
         public string[] usersIDs;
         public string[] usersNames;
+
+        public string[] userIPs;//used in local wifi
         public eRoomState roomState;
 
         public DateTime startTime;
