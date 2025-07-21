@@ -16,7 +16,7 @@ namespace AGSyncCS{
         public static void InitConnection() {
             if (_Instance == null) {
                 _Instance = new Client();
-                Logger.Instance.Debug("C TcpClientWrapper InitConnection IP:" + Config.TCP_HOST
+                Logger.Debug("C TcpClientWrapper InitConnection IP:" + Config.TCP_HOST
                      + ":" + Config.TCP_SERVER_PORT);
                 _Instance.Connect(Config.TCP_HOST, Config.TCP_SERVER_PORT);
             }
@@ -29,6 +29,10 @@ namespace AGSyncCS{
   
     internal class Client
     {
+        public int pos;//position in the room, used to enter the room
+        public string roomID = "";//room to enter
+        public string nickname = "";//nickname, used in local network
+
         private System.Net.Sockets.TcpClient client;
         private NetworkStream stream;
         private bool isConnected;
@@ -49,7 +53,7 @@ namespace AGSyncCS{
 
                 client = new System.Net.Sockets.TcpClient();
                 client.Connect(serverAddress, serverPort);
-                //Logger.Instance.Debug(string.Format("Connectting to TCP server {0}:{1}", serverAddress, serverPort));
+                //Logger.Debug(string.Format("Connectting to TCP server {0}:{1}", serverAddress, serverPort));
                 stream = client.GetStream();
                 isConnected = true;
 
@@ -57,9 +61,13 @@ namespace AGSyncCS{
                 receiveThread = new Thread(ReceiveLoop);
                 receiveThread.IsBackground = true;
                 receiveThread.Start();
+
+                var heatBeatThread = new Thread(_heatBeatLoop);
+                heatBeatThread.IsBackground = true;
+                heatBeatThread.Start();
             }
             catch (Exception ex) {
-                Logger.Instance.Error(string.Format("Failed to connect to TCP server {0}:{1}: {2}",
+                Logger.Error(string.Format("Failed to connect to TCP server {0}:{1}: {2}",
                     serverAddress, serverPort, ex.Message));
                 throw;
             }
@@ -69,7 +77,7 @@ namespace AGSyncCS{
         Dictionary<int, Action<SM>> _listeners = new Dictionary<int, Action<SM>>();
         public void Send(CM cm)
         {
-            Logger.Instance.Debug("C Send() " + cm.ToString());
+            Logger.Debug("C Send() " + cm.ToString());
             ++GlobalUID;
             if (!isConnected)
                 throw new InvalidOperationException("Not connected to server");
@@ -82,7 +90,7 @@ namespace AGSyncCS{
 
                     int protocal = Protocals.GetProtocal(cm); 
                     if (protocal == Protocals.None) {
-                        Logger.Instance.Error(string.Format("Unregistered protocal: {0}", cm.GetType()));
+                        Logger.Error(string.Format("Unregistered protocal: {0}", cm.GetType()));
                         throw new InvalidOperationException("Unregistered protocal");
                     }
                     else
@@ -99,8 +107,27 @@ namespace AGSyncCS{
             }
             catch (Exception ex)
             {
-                Logger.Instance.Error("C Error sending message: " + ex.Message);
+                Logger.Error("C Error sending message: " + ex.Message);
                 throw;
+            }
+        }
+
+        void _heatBeatLoop() {
+            while(isConnected) {
+                try {
+                    Thread.Sleep(Config.HEARTBEAT_INTERVAL);
+                    var cm = new CM_HeartBeat();
+                    cm.lastBeatTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                    cm.onResponse = (sm) => {
+                        var sm_heartbeat = (SM_HeartBeat)sm;
+                        Logger.Debug("C HeartBeat Response:" + sm_heartbeat.lastBeatTime);
+                    };
+
+                    this.Send(cm);
+                }
+                catch (Exception ex) {
+                    Logger.Error("C Error in heartbeat loop: " + ex.Message);
+                }
             }
         }
 
@@ -117,13 +144,13 @@ namespace AGSyncCS{
                     int bytesRead = stream.Read(buffer, 0, buffer.Length);//block且一次只读一个sm（不存在并发，所以下面不锁
 
                     if (bytesRead == 0) { // Connection closed by server
-                        Logger.Instance.Info("Server call Close() or ShutDown()");
+                        Logger.Info("Server call Close() or ShutDown()");
                         break;
                     }
                     var reader = new BinaryReader(ms);
                     var iMessageType = reader.ReadInt32();
                     var protocal = reader.ReadInt32();
-                    Logger.Instance.Log(LogLevel.Debug, "C iMessageType:" + iMessageType + " protocal:" + protocal);
+                    Logger.Log(LogLevel.Debug, "C iMessageType:" + iMessageType + " protocal:" + protocal);
 
                     if (iMessageType == (int)eMessageType.Push) ;//lstodo
                     else if (iMessageType == (int)eMessageType.Response)
@@ -131,14 +158,14 @@ namespace AGSyncCS{
                         var msgUID = reader.ReadInt32();
                         var errorCode = reader.ReadInt32();
 
-                        Logger.Instance.Log(LogLevel.Debug, string.Format("C protocal:{0} " +
+                        Logger.Log(LogLevel.Debug, string.Format("C protocal:{0} " +
                             "messageUID:{1} errorCode:{2}",
                             protocal, msgUID, errorCode));
 
                         if (errorCode == ErrorCode.None) {
                             var sm = Protocals.GetSM(protocal);
                             if(sm == null)
-                                Logger.Instance.Warning("SM not found by protocal:" + protocal);
+                                Logger.Warning("SM not found by protocal:" + protocal);
                             else {
                                 sm.readFrom(reader);
                                 lock (_listeners) {//收发并发，锁
@@ -151,14 +178,14 @@ namespace AGSyncCS{
                             }
                         }
                         else {//lstodo errorCode
-                            Logger.Instance.Warning(string.Format("lstodo cm errorcode {0}", errorCode));
+                            Logger.Warning(string.Format("lstodo cm errorcode {0}", errorCode));
                         }
                     }
-                    else Logger.Instance.Info("Wrong MessageType From Server:" + iMessageType);
+                    else Logger.Info("Wrong MessageType From Server:" + iMessageType);
                 }
                 catch (Exception ex) {
                     if (isConnected)
-                        Logger.Instance.Error("Error receiving from server: " + ex.Message);
+                        Logger.Error("Error receiving from server: " + ex.Message);
                     break;
                 }
             }
@@ -179,11 +206,11 @@ namespace AGSyncCS{
                     client.Close();
                 }
 
-                Logger.Instance.Info("TCP client connection closed");
+                Logger.Info("TCP client connection closed");
             }
             catch (Exception ex)
             {
-                Logger.Instance.Error("Error closing TCP client: " + ex.Message);
+                Logger.Error("Error closing TCP client: " + ex.Message);
             }
         }
 

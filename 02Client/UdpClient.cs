@@ -22,14 +22,14 @@ namespace AGSyncCS
         {
             serverEndPoint = new IPEndPoint(IPAddress.Parse(serverIP), port);
             isConnected = true;
-            Logger.Instance.Info(string.Format("Connected to UDP server at {0}:{1}", serverIP, port));
+            Logger.Info(string.Format("Connected to UDP server at {0}:{1}", serverIP, port));
         }
 
         public void Connect(IPAddress serverIP, int port)
         {
             serverEndPoint = new IPEndPoint(serverIP, port);
             isConnected = true;
-            Logger.Instance.Info(string.Format("Connected to UDP server at {0}:{1}", serverIP, port));
+            Logger.Info(string.Format("Connected to UDP server at {0}:{1}", serverIP, port));
         }
 
         public void Send(string message)
@@ -41,7 +41,7 @@ namespace AGSyncCS
 
             byte[] data = Encoding.UTF8.GetBytes(message);
             udpClient.Send(data, data.Length, serverEndPoint);
-            Logger.Instance.Info("Sent: " + message);
+            Logger.Info("Sent: " + message);
         }
 
         public string SendAndReceive(string message, int timeoutMs = 5000)
@@ -61,14 +61,14 @@ namespace AGSyncCS
                 IPEndPoint remoteEP = new IPEndPoint(IPAddress.Parse(Config.ANY_ADDRESS), 0);
                 byte[] responseData = udpClient.Receive(ref remoteEP);
                 string response = Encoding.UTF8.GetString(responseData);
-                Logger.Instance.Info(string.Format("Received from {0}: {1}", remoteEP, response));
+                Logger.Info(string.Format("Received from {0}: {1}", remoteEP, response));
                 return response;
             }
             catch (SocketException ex)
             {
                 if (ex.SocketErrorCode == SocketError.TimedOut)
                 {
-                    Logger.Instance.Warning("Timeout waiting for response");
+                    Logger.Warning("Timeout waiting for response");
                     return null;
                 }
                 throw;
@@ -94,7 +94,7 @@ namespace AGSyncCS
                 }
                 catch (Exception ex)
                 {
-                    Logger.Instance.Error("Async send error: " + ex.Message);
+                    Logger.Error("Async send error: " + ex.Message);
                     if (callback != null)
                     {
                         callback(null);
@@ -111,7 +111,7 @@ namespace AGSyncCS
             {
                 udpClient.Close();
                 isConnected = false;
-                Logger.Instance.Info("UDP client closed");
+                Logger.Info("UDP client closed");
             }
         }
 

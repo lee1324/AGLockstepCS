@@ -12,7 +12,7 @@ using System.Diagnostics;
 namespace AGSyncCS
 {
     public partial class TCP_Server {
-
+        public static TCP_Server Instance;
         private TcpListener listener;
         private bool isRunning;
         private int port;
@@ -24,6 +24,8 @@ namespace AGSyncCS
 
         public TCP_Server(int port, int maxConnections = 100, int connectionTimeout = 30000)
         {
+            if (Instance == null) Instance = this;
+            else Logger.Error("TCP_Server instance already exists, using singleton pattern");
             this.port = port;
             this.maxConnections = maxConnections;
             this.connectionTimeout = connectionTimeout;
@@ -46,11 +48,11 @@ namespace AGSyncCS
                 serverThread.IsBackground = true;
                 serverThread.Start();
 
-                Logger.Instance.Info(string.Format("TCP server:{0}", port));
+                Logger.Info(string.Format("TCP server:{0}", port));
             }
             catch (Exception ex)
             {
-                Logger.Instance.Error("Failed to start TCP server: " + ex.Message);
+                Logger.Error("Failed to start TCP server: " + ex.Message);
                 throw;
             }
         }
@@ -73,7 +75,7 @@ namespace AGSyncCS
                     }
                     catch (Exception ex)
                     {
-                        Logger.Instance.Error("Error closing connection: " + ex.Message);
+                        Logger.Error("Error closing connection: " + ex.Message);
                     }
                 }
                 activeConnections.Clear();
@@ -91,7 +93,7 @@ namespace AGSyncCS
                 serverThread.Join(5000);
             }
 
-            Logger.Instance.Info("TCP Server stopped");
+            Logger.Info("TCP Server stopped");
         }
 
         private void ListenForClients()
@@ -107,7 +109,7 @@ namespace AGSyncCS
                     {
                         if (activeConnections.Count >= maxConnections)
                         {
-                            Logger.Instance.Warning("Maximum connections reached, rejecting new connection");
+                            Logger.Warning("Maximum connections reached, rejecting new connection");
                             client.Close();
                             continue;
                         }
@@ -121,7 +123,7 @@ namespace AGSyncCS
                         activeConnections.Add(connection);
                     }
 
-                    //Logger.Instance.Debug(string.Format("S new C:{0} (Total: {1})", 
+                    //Logger.Debug(string.Format("S new C:{0} (Total: {1})", 
                     //    client.Client.RemoteEndPoint, activeConnections.Count));
 
                     // Start connection handler in background thread
@@ -133,7 +135,7 @@ namespace AGSyncCS
                 {
                     if (isRunning)
                     {
-                        Logger.Instance.Error("Error accepting TCP client: " + ex.Message);
+                        Logger.Error("Error accepting TCP client: " + ex.Message);
                     }
                 }
             }
@@ -153,7 +155,7 @@ namespace AGSyncCS
             }
             catch (Exception ex)
             {
-                Logger.Instance.Error("Error handling TCP connection: " + ex.Message);
+                Logger.Error("Error handling TCP connection: " + ex.Message);
             }
             finally
             {
@@ -163,7 +165,7 @@ namespace AGSyncCS
                     activeConnections.Remove(connection);
                 }
                 
-                Logger.Instance.Info(string.Format("TCP connection closed from {0} (Remaining: {1})", 
+                Logger.Info(string.Format("TCP connection closed from {0} (Remaining: {1})", 
                     connection.RemoteEndPoint, activeConnections.Count));
             }
         }

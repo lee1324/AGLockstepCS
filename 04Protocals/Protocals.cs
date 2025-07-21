@@ -15,8 +15,7 @@ namespace AGSyncCS {
 
         public const int NewRoom   = 51;
         public const int EnterRoom = 52;
-
-        public const int Disband = 60;
+        public const int QuitRoom  = 53;//客户端退出房间
 
 
         /// <summary>
@@ -32,6 +31,7 @@ namespace AGSyncCS {
             if(cmType == typeof(CM_Test)) p = Test;
             else if(cmType == typeof(CM_NewRoom)) p = NewRoom;
             else if(cmType == typeof(CM_EnterRoom)) p = EnterRoom;
+            else if(cmType == typeof(CM_QuitRoom)) p = QuitRoom;
             return p;
         }
 
@@ -40,6 +40,7 @@ namespace AGSyncCS {
             if (protocal == Test) return new CM_Test();
             else if (protocal == NewRoom) return new CM_NewRoom();
             else if (protocal == EnterRoom) return new CM_EnterRoom();
+            else if(protocal == QuitRoom) return new CM_QuitRoom();
             return null;
         }
 
@@ -47,6 +48,7 @@ namespace AGSyncCS {
             if (protocal == Test) return new SM_Test();
             else if (protocal == NewRoom) return new SM_NewRoom();
             else if (protocal == EnterRoom) return new SM_EnterRoom();
+            else if (protocal == QuitRoom) return new SM_QuitRoom();
             return null;
         }
     }   

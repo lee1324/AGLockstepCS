@@ -8,7 +8,7 @@ namespace AGSyncCS
     {
         public static void RunTest()
         {
-            Logger.Instance.Info("=== TCP Server & Client Test ===");
+            Logger.Info("=== TCP Server & Client Test ===");
 
             // Give server a moment to ensure it's ready
             Thread.Sleep(1000);
@@ -31,48 +31,81 @@ namespace AGSyncCS
             //TestConnectionLimits();
 
             //Thread.Sleep(1000);
-            Logger.Instance.Info("=== TCP Server & Client Test Complete ===");
+            Logger.Info("=== TCP Server & Client Test Complete ===");
         }
 
          private static void Test_InLocalWifi()
          {
-            Logger.Instance.Info("--- Testing Test_InLocalWifi---");
+            Logger.Info("--- Testing Test_InLocalWifi---");
             var localClients = new Client[Config.MaxPlayersPerRoom];
+            //owner is clients[0], ignore localClients[0]
 
-            for (int i = 0; i < localClients.Length; ++i) {
+            const string roomID = "007024";//for test in A285
+
+            for (int i = 1; i < localClients.Length; ++i) {
                 var idx = i;
                 Thread clientThread = new Thread(() => {
-                    var c = new Client();
-                    //Step 13: client connects to server by RoomID(IP)
-                    c.Connect(Config.TCP_HOST, Config.TCP_SERVER_PORT);
-                    localClients[idx] = c;
+                    var client = new Client();
+                    client.pos = idx;
+                    client.roomID = roomID;
+                    client.nickname = "TestUser" + idx; // Set a nickname for the client
+
+                    var ownerIP = Tools.RoomID2IP(roomID);
+                    //Step 03: client connects to server by RoomID(IP)
+                    client.Connect(ownerIP, Config.TCP_SERVER_PORT);
+                    localClients[idx] = client;
                 });
                 clientThread.IsBackground = true;
                 clientThread.Start();
-                Logger.Instance.Debug(string.Format("C Test_InLocalWifi Client {0} started", i));
+                Logger.Debug(string.Format("C Test_InLocalWifi Client {0} started", i));
 
-                Thread.Sleep(3000);
             }
+            Thread.Sleep(1000);
 
-             for (int i = 0; i < localClients.Length; ++i)
+            Logger.Debug("--- Test EnterRoom ---");
+             for (int i = 1; i < localClients.Length; ++i)
              {
                  int clientId = i;
                  try {
                      Client client = localClients[clientId];
                      var cm = new CM_EnterRoom();
 
-                     cm.roomID = "100001";
-                     cm.userID = "autoTestUserID:" + i;
-                     cm.onResponse = (s) => {
-                         Logger.Instance.Debug("C NewRoom Response:" + s.ToString());
+                     cm.pos = client.pos; // Set position for the client
+                     cm.roomID = client.roomID;
+                     cm.nickname = client.nickname; // Set a nickname for the client
+
+                    cm.onResponse = (s) => {
+                         Logger.Debug("C NewRoom Response:" + s.ToString());//enter success
                      };
                      client.Send(cm);
                  }
                  catch (Exception ex) {
-                     Logger.Instance.Error(string.Format("ClientId {0} Error: {1}", clientId, ex.Message));
+                     Logger.Error(string.Format("ClientId {0} Error: {1}", clientId, ex.Message));
                  }
-           
-         
+                 Thread.Sleep(1000);
+                 TCP_Server.Instance.localRoom.printState();
+            }
+
+             Logger.Debug("--- Test QuitRoom ---");
+             for (int i = 1; i < localClients.Length; ++i)
+             {
+                 int clientId = i;
+                 try {
+                     Client client = localClients[clientId];
+                     var cm = new CM_QuitRoom();
+
+                     cm.pos = client.pos; // Set position for the client
+                     cm.roomID = client.roomID;
+                     cm.onResponse = (s) => {
+                         Logger.Debug("C QuitRoom Response:" + s.ToString());//enter success
+                     };
+                     client.Send(cm);
+                 }
+                 catch (Exception ex) {
+                     Logger.Error(string.Format("ClientId {0} Error: {1}", clientId, ex.Message));
+                 }
+                 Thread.Sleep(1000);
+                 TCP_Server.Instance.localRoom.printState();
              }
         }
         
@@ -83,14 +116,14 @@ namespace AGSyncCS
             cm.str1 = "CM_Test Hello from client.";
             cm.onResponse = (response) => {
                 var sm = (SM_Test)response;
-                Logger.Instance.Info("response() SM_TEST:" + sm.ToString());
+                Logger.Info("response() SM_TEST:" + sm.ToString());
             };
             cm.send();
         }
         
         private static void TestMultipleClients()
         {
-            Logger.Instance.Info("--- Testing Multiple TCP Clients ---");
+            Logger.Info("--- Testing Multiple TCP Clients ---");
             
             // Start multiple clients simultaneously
             for (int i = 1; i <= 5; i++)
@@ -111,8 +144,8 @@ namespace AGSyncCS
                             cm.onResponse = (s) => {
                                 var sm = (SM_Test)s;
                                 if(sm.i1 - cm.i1 == 20) 
-                                    Logger.Instance.Info("C Test Correct:" + sm.ToString());
-                                else Logger.Instance.Info("C Test Wrong:" + sm.ToString());
+                                    Logger.Info("C Test Correct:" + sm.ToString());
+                                else Logger.Info("C Test Wrong:" + sm.ToString());
                             };
                             client.Send(cm);
                         }
@@ -121,7 +154,7 @@ namespace AGSyncCS
                     }
                     catch (Exception ex)
                     {
-                        Logger.Instance.Error(string.Format("ClientId {0} Error: {1}", clientId, ex.Message));
+                        Logger.Error(string.Format("ClientId {0} Error: {1}", clientId, ex.Message));
                     }
                 });
                 clientThread.IsBackground = true;
@@ -135,7 +168,7 @@ namespace AGSyncCS
        
         private static void Test_CM_NewRoom()
         {
-            Logger.Instance.Info("--- Testing Multiple TCP Clients ---");
+            Logger.Info("--- Testing Multiple TCP Clients ---");
              for (int i = 0; i < Config.MaxRooms + 10 ; ++i)
             {
                 int clientId = i;
@@ -150,7 +183,7 @@ namespace AGSyncCS
                         var cm = new CM_NewRoom();
                         cm.userID = "autoTestUserID:" + i;
                         cm.onResponse = (s) => {
-                            Logger.Instance.Debug("C NewRoom Response:" + s.ToString());
+                            Logger.Debug("C NewRoom Response:" + s.ToString());
                         };
                         client.Send(cm);
                         
@@ -158,7 +191,7 @@ namespace AGSyncCS
                     }
                     catch (Exception ex)
                     {
-                        Logger.Instance.Error(string.Format("ClientId {0} Error: {1}", clientId, ex.Message));
+                        Logger.Error(string.Format("ClientId {0} Error: {1}", clientId, ex.Message));
                     }
                 });
                 clientThread.IsBackground = true;
@@ -173,7 +206,7 @@ namespace AGSyncCS
             
         private static void TestConnectionLimits()
         {
-            Logger.Instance.Info("--- Testing Connection Limits ---");
+            Logger.Info("--- Testing Connection Limits ---");
             
             // Try to create more connections than the server allows
             for (int i = 1; i <= 12; i++) // Server limit is 10
@@ -186,7 +219,7 @@ namespace AGSyncCS
                         Client client = new Client();
                         client.Connect(Config.TCP_HOST, Config.TCP_SERVER_PORT);
                         
-                        Logger.Instance.Info(string.Format("Connection {0} established successfully", clientId));
+                        Logger.Info(string.Format("Connection {0} established successfully", clientId));
                         
                         // Keep connection alive briefly
                         Thread.Sleep(Config.TEST_DELAY_MS);
@@ -195,7 +228,7 @@ namespace AGSyncCS
                     }
                     catch (Exception ex)
                     {
-                        Logger.Instance.Warning(string.Format("Connection {0} failed (expected if over limit): {1}", clientId, ex.Message));
+                        Logger.Warning(string.Format("Connection {0} failed (expected if over limit): {1}", clientId, ex.Message));
                     }
                 });
                 clientThread.IsBackground = true;

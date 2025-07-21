@@ -8,7 +8,7 @@ using System.Text;
 using System.Threading;
 
 namespace AGSyncCS {
-    partial class TcpClientConnection
+    public partial class TcpClientConnection
     {
         private TcpClient client;
         private NetworkStream stream;
@@ -52,11 +52,11 @@ namespace AGSyncCS {
                 receiveThread.IsBackground = true;
                 receiveThread.Start();
 
-                Logger.Instance.Debug(string.Format("S TCP connection {0} started", remoteEndPoint));
+                Logger.Debug(string.Format("S TCP connection {0} started", remoteEndPoint));
             }
             catch (Exception ex)
             {
-                Logger.Instance.Error(string.Format("Error starting TCP connection {0}: {1}", remoteEndPoint, ex.Message));
+                Logger.Error(string.Format("Error starting TCP connection {0}: {1}", remoteEndPoint, ex.Message));
                 throw;
             }
         }
@@ -70,9 +70,9 @@ namespace AGSyncCS {
                 try {
                     ms.Position = 0;//prepare for next, network stream doest support seek, use ms instead.
                     int bytesRead = stream.Read(buffer, 0, buffer.Length);//block
-                    //Logger.Instance.Debug(string.Format("S Read from {0}, bytesRead: {1}", remoteEndPoint, bytesRead));
+                    //Logger.Debug(string.Format("S Read from {0}, bytesRead: {1}", remoteEndPoint, bytesRead));
                     if (bytesRead == 0) {
-                        Logger.Instance.Info("S Connection closed by client: " + remoteEndPoint);
+                        Logger.Info("S Connection closed by client: " + remoteEndPoint);
                         break;
                     }
 
@@ -83,7 +83,7 @@ namespace AGSyncCS {
                         int messasgeUID = 0;
 
                         if (cm == null) {//error or malicious
-                            Logger.Instance.Warning($"CM == null, protocal: {protocal} from {remoteEndPoint}");
+                            Logger.Warning($"CM == null, protocal: {protocal} from {remoteEndPoint}");
                             continue;
                         }
                         else {
@@ -100,7 +100,7 @@ namespace AGSyncCS {
                 catch (Exception ex) {
                     if (isConnected) {
                         //Dont READ or writer networkstream.Position, otherwise it will throw exception
-                        Logger.Instance.Debug(string.Format("S Is C closed? Error receiving from {0}: {1}.", remoteEndPoint, ex.Message));
+                        Logger.Debug(string.Format("S Is C closed? Error receiving from {0}: {1}.", remoteEndPoint, ex.Message));
                     }
                     break;
                 }
@@ -122,10 +122,10 @@ namespace AGSyncCS {
                 lock (streamLock) {
                     stream.Write(buffer, 0, (int)ms.Length);
                 }
-                Logger.Instance.Debug(string.Format("Push to {0}: {1}", remoteEndPoint, sm.ToString()));
+                Logger.Debug(string.Format("Push to {0}: {1}", remoteEndPoint, sm.ToString()));
             }
             catch (Exception ex) {
-                Logger.Instance.Error(string.Format("Error pushing to {0}: {1}", remoteEndPoint, ex.Message));
+                Logger.Error(string.Format("Error pushing to {0}: {1}", remoteEndPoint, ex.Message));
                 throw;
             }
         }
@@ -149,18 +149,18 @@ namespace AGSyncCS {
                     writer.Write(errorCode);//在push时无errorcode，但是push也用这套，省（个接口+推送判断）
 
                     if (errorCode == ErrorCode.None){
-                        if (sm == null) Logger.Instance.Warning("errorCode or sm, U forgot 2 set one of 'em!!!");
+                        if (sm == null) Logger.Warning("errorCode or sm, U forgot 2 set one of 'em!!!");
                         else {
                             sm.writeTo(writer);
                             stream.Write(buffer, 0, (int)ms.Length);
-                            Logger.Instance.Debug(string.Format("S 2C {0}: {1}", remoteEndPoint, sm.ToString()));
+                            Logger.Debug(string.Format("S 2C {0}: {1}", remoteEndPoint, sm.ToString()));
                         }
                     }
                 }
                
             }
             catch (Exception ex) {
-                Logger.Instance.Error(string.Format("Error sending to {0}: {1}", remoteEndPoint, ex.Message));
+                Logger.Error(string.Format("Error sending to {0}: {1}", remoteEndPoint, ex.Message));
                 throw;
             }
         }
@@ -181,7 +181,7 @@ namespace AGSyncCS {
             }
             catch (Exception ex)
             {
-                Logger.Instance.Error(string.Format("Error closing TCP connection {0}: {1}", remoteEndPoint, ex.Message));
+                Logger.Error(string.Format("Error closing TCP connection {0}: {1}", remoteEndPoint, ex.Message));
             }
         }
     }

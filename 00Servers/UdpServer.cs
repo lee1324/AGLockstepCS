@@ -31,7 +31,7 @@ namespace AGSyncCS
             listenThread = new Thread(ListenLoop);
             listenThread.IsBackground = true;
             listenThread.Start();
-            Logger.Instance.Info("UDP server started on port " + port);
+            Logger.Info("UDP server started on port " + port);
         }
 
         public void Stop()
@@ -45,7 +45,7 @@ namespace AGSyncCS
             {
                 listenThread.Join(1000);
             }
-            Logger.Instance.Info("UDP server stopped.");
+            Logger.Info("UDP server stopped.");
         }
 
         private void ListenLoop()
@@ -57,13 +57,13 @@ namespace AGSyncCS
                 {
                     byte[] data = udpClient.Receive(ref remoteEP);
                     string message = Encoding.UTF8.GetString(data);
-                    Logger.Instance.Info(string.Format("Received from {0}: {1}", remoteEP, message));
+                    Logger.Info(string.Format("Received from {0}: {1}", remoteEP, message));
 
                     if (echoBack)
                     {
                         byte[] echoData = Encoding.UTF8.GetBytes("Echo: " + message);
                         udpClient.Send(echoData, echoData.Length, remoteEP);
-                        Logger.Instance.Debug(string.Format("Echoed back to {0}", remoteEP));
+                        Logger.Debug(string.Format("Echoed back to {0}", remoteEP));
                     }
                 }
                 catch (SocketException)
@@ -73,7 +73,7 @@ namespace AGSyncCS
                 }
                 catch (Exception ex)
                 {
-                    Logger.Instance.Error("UDP server error: " + ex.Message);
+                    Logger.Error("UDP server error: " + ex.Message);
                 }
             }
         }

@@ -3,6 +3,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
+using System.Collections.Generic; // Added for List
 
 namespace AGSyncCS
 {
@@ -10,7 +11,7 @@ namespace AGSyncCS
     {
         public static void RunTest()
         {
-            Logger.Instance.Info("=== Comprehensive Server Test ===");
+            Logger.Info("=== Comprehensive Server Test ===");
             
             // Test HTTP Server
             TestHttpServer();
@@ -19,155 +20,144 @@ namespace AGSyncCS
             TestUdpServer();
             
             // Test both servers simultaneously
-            TestBothServersSimultaneously();
+            TestBothServersTogether();
             
-            Logger.Instance.Info("=== Comprehensive Server Test Complete ===");
+            Thread.Sleep(2000);
+            Logger.Info("=== Comprehensive Server Test Complete ===");
         }
         
         private static void TestHttpServer()
         {
-            Logger.Instance.Info(string.Format("--- Testing HTTP Server (Port {0}) ---", Config.HTTP_SERVER_PORT));
+            Logger.Info(string.Format("--- Testing HTTP Server (Port {0}) ---", Config.HTTP_SERVER_PORT));
             
             try
             {
                 // Test 1: Status endpoint
-                Logger.Instance.Info("Test 1: HTTP Status Endpoint");
-                string statusResponse = SendHttpRequest("GET", Config.GetHttpServerUrl() + "/api/status", null);
-                Logger.Instance.Info("Status Response: " + statusResponse);
+                Logger.Info("Test 1: HTTP Status Endpoint");
+                string statusResponse = SendHttpRequest(Config.HTTP_SERVER_PORT, "/status");
+                Logger.Info("Status Response: " + statusResponse);
                 
                 // Test 2: Echo endpoint
-                Logger.Instance.Info("Test 2: HTTP Echo Endpoint");
-                string echoResponse = SendHttpRequest("POST", Config.GetHttpServerUrl() + "/api/echo", "Hello from HTTP test!");
-                Logger.Instance.Info("Echo Response: " + echoResponse);
+                Logger.Info("Test 2: HTTP Echo Endpoint");
+                string echoResponse = SendHttpRequest(Config.HTTP_SERVER_PORT, "/echo?text=hello");
+                Logger.Info("Echo Response: " + echoResponse);
                 
                 // Test 3: Main page
-                Logger.Instance.Info("Test 3: HTTP Main Page");
-                string mainPageResponse = SendHttpRequest("GET", Config.GetHttpServerUrl() + "/", null);
-                Logger.Instance.Info("Main Page Response Length: " + mainPageResponse.Length + " characters");
+                Logger.Info("Test 3: HTTP Main Page");
+                string mainPageResponse = SendHttpRequest(Config.HTTP_SERVER_PORT, "/");
+                Logger.Info("Main Page Response Length: " + mainPageResponse.Length + " characters");
                 
                 // Test 4: 404 endpoint
-                Logger.Instance.Info("Test 4: HTTP 404 Endpoint");
-                string notFoundResponse = SendHttpRequest("GET", Config.GetHttpServerUrl() + "/nonexistent", null);
-                Logger.Instance.Info("404 Response: " + notFoundResponse);
+                Logger.Info("Test 4: HTTP 404 Endpoint");
+                string notFoundResponse = SendHttpRequest(Config.HTTP_SERVER_PORT, "/nonexistent");
+                Logger.Info("404 Response: " + notFoundResponse);
                 
             }
             catch (Exception ex)
             {
-                Logger.Instance.Error("HTTP Server Test Error: " + ex.Message);
+                Logger.Error("HTTP Server Test Error: " + ex.Message);
             }
         }
         
         private static void TestUdpServer()
         {
-            Logger.Instance.Info(string.Format("--- Testing UDP Server (Port {0}) ---", Config.UDP_SERVER_PORT));
-            
+            Logger.Info(string.Format("--- Testing UDP Server (Port {0}) ---", Config.UDP_SERVER_PORT));
+            UdpClientWrapper client = new UdpClientWrapper();
             try
             {
-                UdpClientWrapper client = new UdpClientWrapper();
-                client.Connect(Config.LOCALHOST, Config.UDP_SERVER_PORT);
-                
+                client.Connect(Config.UDP_HOST, Config.UDP_SERVER_PORT);
+
                 // Test 1: Simple message
-                Logger.Instance.Info("Test 1: UDP Simple Message");
-                string response1 = client.SendAndReceive("Hello UDP Server!");
-                Logger.Instance.Info("UDP Response 1: " + response1);
-                
+                Logger.Info("Test 1: UDP Simple Message");
+                string response1 = client.SendAndReceive("UDP Test 1");
+                Logger.Info("UDP Response 1: " + response1);
+
                 // Test 2: Multiple messages
-                Logger.Instance.Info("Test 2: UDP Multiple Messages");
-                string[] messages = { "Test A", "Test B", "Test C" };
-                foreach (string msg in messages)
+                Logger.Info("Test 2: UDP Multiple Messages");
+                for (int i = 0; i < 3; i++)
                 {
+                    string msg = "UDP Message " + i;
                     string response = client.SendAndReceive(msg);
-                    Logger.Instance.Info("UDP Message: " + msg + " -> Response: " + response);
-                    Thread.Sleep(200);
+                    Logger.Info("UDP Message: " + msg + " -> Response: " + response);
                 }
-                
+
                 // Test 3: Long message
-                Logger.Instance.Info("Test 3: UDP Long Message");
-                string longMessage = "This is a longer message to test UDP server handling of larger packets. " +
-                                   "It contains multiple sentences and should be properly echoed back by the server.";
+                Logger.Info("Test 3: UDP Long Message");
+                string longMessage = new string('a', 1000);
                 string longResponse = client.SendAndReceive(longMessage);
-                Logger.Instance.Info("UDP Long Response: " + longResponse);
-                
-                client.Close();
-                
+                Logger.Info("UDP Long Response: " + longResponse);
             }
             catch (Exception ex)
             {
-                Logger.Instance.Error("UDP Server Test Error: " + ex.Message);
+                Logger.Error("UDP Server Test Error: " + ex.Message);
+            }
+            finally
+            {
+                client.Close();
             }
         }
         
-        private static void TestBothServersSimultaneously()
+        private static void TestBothServersTogether()
         {
-            Logger.Instance.Info("--- Testing Both Servers Simultaneously ---");
+            Logger.Info("--- Testing Both Servers Simultaneously ---");
             
-            // Start multiple threads to test both servers at the same time
-            Thread httpTestThread = new Thread(() => {
-                for (int i = 1; i <= 3; i++)
-                {
+            List<Thread> threads = new List<Thread>();
+            
+            // HTTP threads
+            for (int i = 0; i < 5; i++)
+            {
+                threads.Add(new Thread(() => {
                     try
                     {
-                        string response = SendHttpRequest("GET", Config.GetHttpServerUrl() + "/api/status", null);
-                        Logger.Instance.Info("HTTP Thread Test " + i + ": " + response);
-                        Thread.Sleep(500);
+                        string response = SendHttpRequest(Config.HTTP_SERVER_PORT, "/echo?text=threadtest" + i);
+                        Logger.Info("HTTP Thread Test " + i + ": " + response);
                     }
                     catch (Exception ex)
                     {
-                        Logger.Instance.Error("HTTP Thread Error: " + ex.Message);
+                        Logger.Error("HTTP Thread Error: " + ex.Message);
                     }
-                }
-            });
+                }));
+            }
             
-            Thread udpTestThread = new Thread(() => {
-                try
-                {
-                    UdpClientWrapper client = new UdpClientWrapper();
-                    client.Connect(Config.LOCALHOST, Config.UDP_SERVER_PORT);
-                    
-                    for (int i = 1; i <= 3; i++)
+            // UDP threads
+            UdpClientWrapper[] udpClients = new UdpClientWrapper[5];
+            for (int i = 0; i < 5; i++)
+            {
+                udpClients[i] = new UdpClientWrapper();
+                udpClients[i].Connect(Config.UDP_HOST, Config.UDP_SERVER_PORT);
+                int threadNum = i;
+                threads.Add(new Thread(() => {
+                    try
                     {
-                        string response = client.SendAndReceive("Simultaneous Test " + i);
-                        Logger.Instance.Info("UDP Thread Test " + i + ": " + response);
-                        Thread.Sleep(500);
+                        string response = udpClients[threadNum].SendAndReceive("UDP Thread Test " + threadNum);
+                        Logger.Info("UDP Thread Test " + i + ": " + response);
                     }
-                    
-                    client.Close();
-                }
-                catch (Exception ex)
-                {
-                    Logger.Instance.Error("UDP Thread Error: " + ex.Message);
-                }
-            });
+                    catch (Exception ex)
+                    {
+                        Logger.Error("UDP Thread Error: " + ex.Message);
+                    }
+                }));
+            }
             
-            httpTestThread.Start();
-            udpTestThread.Start();
-            
-            // Wait for both threads to complete
-            httpTestThread.Join();
-            udpTestThread.Join();
-            
-            Logger.Instance.Info("--- Simultaneous Testing Complete ---");
+            foreach(var t in threads) t.Start();
+            foreach(var t in threads) t.Join();
+
+            foreach(var c in udpClients) c.Close();
+
+            Logger.Info("--- Simultaneous Testing Complete ---");
         }
         
-        private static string SendHttpRequest(string method, string url, string data)
+        private static string SendHttpRequest(int port, string path)
         {
             try
             {
-                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
-                request.Method = method;
+                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(Config.GetHttpServerUrl() + path);
+                request.Method = "GET"; // Default to GET for simplicity, adjust for POST if needed
                 request.Timeout = 5000;
                 
-                if (method == "POST" && !string.IsNullOrEmpty(data))
-                {
-                    byte[] postData = Encoding.UTF8.GetBytes(data);
-                    request.ContentType = "text/plain";
-                    request.ContentLength = postData.Length;
-                    
-                    using (var stream = request.GetRequestStream())
-                    {
-                        stream.Write(postData, 0, postData.Length);
-                    }
-                }
+                // For POST, you'd need to set ContentType and ContentLength
+                // and write data to the request stream.
+                // This example is simplified for GET.
                 
                 using (HttpWebResponse response = (HttpWebResponse)request.GetResponse())
                 {

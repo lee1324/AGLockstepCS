@@ -1,30 +1,30 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 using System.IO;
 
 namespace AGSyncCS {
 
-    public class CM_EnterRoom : CM
+    public class CM_QuitRoom : CM
     {
         //for remote network
         public int pos = -1;//position in the room, used to enter the room
         public string roomID = "";//room to enter
-        public string nickname = "";//nickname of the user, used in local network
-
 
         public override void writeTo(BinaryWriter writer)
         {
             writer.Write(pos);
             writer.Write(roomID);
-            writer.Write(nickname);
         }
         public override void readFrom(BinaryReader reader)
         {
             pos = reader.ReadInt32(); 
             roomID = reader.ReadString();
-            nickname = reader.ReadString();
         }
     }
 
-    public class SM_EnterRoom : SM
+    public class SM_QuitRoom : SM
     {
         public int pos;//send backto client
         public string roomID;//send back to client

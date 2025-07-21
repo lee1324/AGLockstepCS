@@ -8,40 +8,38 @@ using System.Text;
 
 namespace AGSyncCS {
 
-    public partial class Room {
+     public partial class Room {
+        public string ID;
+        //send all users in this room(self @ 0), sometimes ignore self
+
         /// <summary>
-        /// [0] -> owner
+        /// 0 owner(could be null), 1,2,3 as other members(not null)
         /// </summary>
-        public string[] usersIDs;
+        public TcpClientConnection[] usersConnections;//used in local wifi
         public string[] usersNames;
 
-        public string[] usersIPs;//used in local wifi
         public eRoomState roomState;
         public DateTime startTime;
 
-        /// <summary>
-        /// roomID(6 digits string)
-        /// </summary>
-        /// <returns></returns>
-        public string getID() {
-            var o = Tools.IP2RoomID(usersIPs[0]);
-            return o;
-        }
 
         public void update() {
 
         }
 
-
         public Room() {
             roomState = eRoomState.Idle;
             startTime = DateTime.Now;
-
-            usersIDs = new string[Config.MaxPlayersPerRoom];
+            usersConnections = new TcpClientConnection[Config.MaxPlayersPerRoom];
             usersNames = new string[Config.MaxPlayersPerRoom];
-            for(int i = 0; i < Config.MaxPlayersPerRoom; ++i) {
-                usersIDs[i] = "";
-                usersNames[i] = "";
+        }
+
+        public void printState() {
+            for(int i = 1; i < usersConnections.Length; i++) {
+                if (usersConnections[i] != null) {
+                    Logger.Info(string.Format("member[{0}] name:{1} IP:{2}", i,  usersNames[i],  usersConnections[i].RemoteEndPoint));
+                } else {
+                    Logger.Info(string.Format("member[{0}] empty", i));
+                }
             }
         }
 

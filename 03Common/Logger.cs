@@ -17,19 +17,18 @@ namespace AGSyncCS
 
     public class Logger
     {
-        private static Logger instance;
         private static readonly object lockObject = new object();
         
-        private string logFilePath;
-        private LogLevel minimumLevel;
-        private bool enableConsoleOutput;
-        private bool enableFileOutput;
-        private Queue<LogEntry> logQueue;
-        private Thread logWorkerThread;
-        private bool isRunning;
-        private readonly object queueLock = new object();
+        private static string logFilePath;
+        private static LogLevel minimumLevel;
+        private static bool enableConsoleOutput;
+        private static bool enableFileOutput;
+        private static Queue<LogEntry> logQueue;
+        private static Thread logWorkerThread;
+        private static bool isRunning;
+        private static readonly object queueLock = new object();
 
-        public Logger()
+        static Logger()
         {
             logFilePath = Config.LOG_FILE_PATH;
             minimumLevel = Config.DEFAULT_LOG_LEVEL;
@@ -39,49 +38,31 @@ namespace AGSyncCS
             isRunning = false;
         }
 
-        public static Logger Instance
-        {
-            get
-            {
-                if (instance == null)
-                {
-                    lock (lockObject)
-                    {
-                        if (instance == null)
-                        {
-                            instance = new Logger();
-                        }
-                    }
-                }
-                return instance;
-            }
-        }
-
-        public string LogFilePath
+        public static string LogFilePath
         {
             get { return logFilePath; }
             set { logFilePath = value; }
         }
 
-        public LogLevel MinimumLevel
+        public static LogLevel MinimumLevel
         {
             get { return minimumLevel; }
             set { minimumLevel = value; }
         }
 
-        public bool EnableConsoleOutput
+        public static bool EnableConsoleOutput
         {
             get { return enableConsoleOutput; }
             set { enableConsoleOutput = value; }
         }
 
-        public bool EnableFileOutput
+        public static bool EnableFileOutput
         {
             get { return enableFileOutput; }
             set { enableFileOutput = value; }
         }
 
-        public void Start()
+        public static void Start()
         {
             if (isRunning)
                 return;
@@ -92,7 +73,7 @@ namespace AGSyncCS
             logWorkerThread.Start();
         }
 
-        public void Stop()
+        public static void Stop()
         {
             isRunning = false;
             if (logWorkerThread != null && logWorkerThread.IsAlive)
@@ -101,42 +82,42 @@ namespace AGSyncCS
             }
         }
 
-        public void Debug(string message)
+        public static void Debug(string message)
         {
             Log(LogLevel.Debug, message);
         }
 
-        public void Info(string message)
+        public static void Info(string message)
         {
             Log(LogLevel.Info, message);
         }
 
-        public void Warning(string message)
+        public static void Warning(string message)
         {
             Log(LogLevel.Warning, message);
         }
 
-        public void Error(string message)
+        public static void Error(string message)
         {
             Log(LogLevel.Error, message);
         }
 
-        public void Error(string message, Exception exception)
+        public static void Error(string message, Exception exception)
         {
             Log(LogLevel.Error, message, exception);
         }
 
-        public void Fatal(string message)
+        public static void Fatal(string message)
         {
             Log(LogLevel.Fatal, message);
         }
 
-        public void Fatal(string message, Exception exception)
+        public static void Fatal(string message, Exception exception)
         {
             Log(LogLevel.Fatal, message, exception);
         }
 
-        public void Log(LogLevel level, string message)
+        public static void Log(LogLevel level, string message)
         {
             if (level < minimumLevel)
                 return;
@@ -156,7 +137,7 @@ namespace AGSyncCS
             }
         }
 
-        public void Log(LogLevel level, string message, Exception exception)
+        public static void Log(LogLevel level, string message, Exception exception)
         {
             if (level < minimumLevel)
                 return;
@@ -169,7 +150,7 @@ namespace AGSyncCS
             Log(level, sb.ToString());
         }
 
-        private void ProcessLogQueue()
+        private static void ProcessLogQueue()
         {
             while (isRunning)
             {
@@ -205,7 +186,7 @@ namespace AGSyncCS
             }
         }
 
-        private void WriteLogEntry(LogEntry entry)
+        private static void WriteLogEntry(LogEntry entry)
         {
             string logMessage = FormatLogEntry(entry);
 
@@ -220,7 +201,7 @@ namespace AGSyncCS
             }
         }
 
-        private string FormatLogEntry(LogEntry entry)
+        private static string FormatLogEntry(LogEntry entry)
         {
             return string.Format("[{0:yyyy-MM-dd HH:mm:ss.fff}] [{1}] [Thread-{2}] {3}",
                 entry.Timestamp,
@@ -229,7 +210,7 @@ namespace AGSyncCS
                 entry.Message);
         }
 
-        private void WriteToConsole(LogLevel level, string message)
+        private static void WriteToConsole(LogLevel level, string message)
         {
             ConsoleColor originalColor = Console.ForegroundColor;
 
@@ -256,7 +237,7 @@ namespace AGSyncCS
             Console.ForegroundColor = originalColor;
         }
 
-        private void WriteToFile(string message)
+        private static void WriteToFile(string message)
         {
             try
             {
@@ -273,7 +254,7 @@ namespace AGSyncCS
             }
         }
 
-        public void ClearLogFile()
+        public static void ClearLogFile()
         {
             try
             {
@@ -291,7 +272,7 @@ namespace AGSyncCS
             }
         }
 
-        public string[] GetRecentLogs(int lineCount = 100)
+        public static string[] GetRecentLogs(int lineCount = 100)
         {
             try
             {

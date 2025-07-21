@@ -5,9 +5,13 @@ namespace AGSyncCS
 {
     public static partial class Config
     {
-        public static int MaxPlayersPerRoom = 2;
+        public static int MaxPlayersPerRoom = 4;
         public static int MaxRooms = 10;
-        public const string TCP_HOST = "127.0.0.1";
+        public static string TCP_HOST = "127.0.0.1";
+
+        public static int HEARTBEAT_INTERVAL = 30000;
+
+        public static string UDP_HOST = "127.0.0.1";
         //public const string TCP_HOST = "47.115.227.169";
         //public const string TCP_HOST = "192.168.6.222";//mac mini 5G
         // Server IP Addresses

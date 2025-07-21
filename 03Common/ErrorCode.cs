@@ -8,5 +8,11 @@ public class ErrorCode
     /// ÐèÒªÅÅ¶Ó
     /// </summary>
     public const int NoRoomsAvailable = 30;
+    public const int RoomNotFound = 31;
+    public const int RoomFull = 32;
+    public const int PosTaken = 33; //position already taken by another user
+    public const int InvalidPosition = 34;//invalid position, e.g. 0 or > Config.MaxPlayersPerRoom
+    public const int PositionOccupied = 35; //position occupied by other user
 
+    public static int PositionNotFound = 36; //position not found in the room
 }
