@@ -8,6 +8,31 @@ using System.Text;
 
 namespace AGSyncCS {
 
+    public partial class TCP_Server{ 
+        /// <summary>
+        /// use this in local network(created by owner
+        /// </summary>
+        Room localRoom = null;
+        public void newLocalRoom(string ownerName){
+            localRoom = new Room();
+            localRoom.roomState = eRoomState.Idle;
+            localRoom.startTime = DateTime.Now;
+            //set owner
+            localRoom.usersNames = new string[Config.MaxPlayersPerRoom]; 
+            localRoom.usersIDs = new string[Config.MaxPlayersPerRoom];
+            localRoom.usersIPs = new string[Config.MaxPlayersPerRoom];
+
+
+            localRoom.usersNames[0] = ownerName;
+            localRoom.usersIPs[0] = Tools.GetLocalIP();
+            //step 14: tell other clients of owner's roomID
+            Logger.Instance.Info(string.Format("New local room created by {0} with IP {1}", ownerName, localRoom.usersIPs[0]));
+            Logger.Instance.Info("roomID:" + localRoom.getID());
+        }
+
+   
+    }
+
     partial class TcpClientConnection {
 
         void dispatch(int protocal, CM cm, ref int errorCode, ref SM sm_response) {
@@ -19,27 +44,12 @@ namespace AGSyncCS {
                 on((CM_EnterRoom) cm , ref errorCode, ref sm_response);
         }
 
-        Room localRoom = null;
-        void on(CM_NewRoom cm, ref int errorCode, ref SM sm_response) {
-            localRoom = new Room();
-            localRoom.roomState = eRoomState.Waiting;
-            localRoom.ID = getLocalRoomID();
-            localRoom.usersIDs[0] = cm.userID;
-
-            var sm = new SM_NewRoom();
-            sm.roomID = localRoom.ID;
-            sm_response = sm; //set reponse to client
-        }
-
-        //void on(CM_ReEnterRoom cm, ref int errorCode, ref SM sm_response) {
-
-        //}
+        //None in local network/Wifi
+        void on(CM_NewRoom cm, ref int errorCode, ref SM sm_response) { }
 
         void on(CM_EnterRoom cm, ref int errorCode, ref SM sm_response) {
 
         }
-
-
 
         void on(CM_Test cm, ref int errorCode, ref SM sm_response) {
             var s = new SM_Test();
@@ -48,20 +58,6 @@ namespace AGSyncCS {
             sm_response = s;//set reponse to client
         }
 
-        //called by owner
-        string getLocalRoomID() {//last 2 parts of local IP address
-            var ID = "0000001";
-            var host = Dns.GetHostEntry(Dns.GetHostName());
-            foreach (var ip in host.AddressList)
-            {
-                if (ip.AddressFamily == AddressFamily.InterNetwork) // IPv4
-                {
-                    var ipStr = ip.ToString();
-                    string[] splits = ip.ToString().Split('.');
-                    ID = string.Format("{0:D3}{1:D3}", int.Parse(splits[2]), int.Parse(splits[3]));
-                }
-            }
-            return ID;
-        }
+     
     }
 }

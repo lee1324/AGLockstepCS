@@ -3,22 +3,30 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Runtime.Remoting.Channels;
 using System.Text;
 
 namespace AGSyncCS {
 
     public partial class Room {
-        public string ID;
         /// <summary>
         /// [0] -> owner
         /// </summary>
         public string[] usersIDs;
         public string[] usersNames;
 
-        public string[] userIPs;//used in local wifi
+        public string[] usersIPs;//used in local wifi
         public eRoomState roomState;
-
         public DateTime startTime;
+
+        /// <summary>
+        /// roomID(6 digits string)
+        /// </summary>
+        /// <returns></returns>
+        public string getID() {
+            var o = Tools.IP2RoomID(usersIPs[0]);
+            return o;
+        }
 
         public void update() {
 

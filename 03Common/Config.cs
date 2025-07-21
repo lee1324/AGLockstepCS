@@ -5,7 +5,7 @@ namespace AGSyncCS
 {
     public static partial class Config
     {
-        public static int MaxPlayersPerRoom = 4;
+        public static int MaxPlayersPerRoom = 2;
         public static int MaxRooms = 10;
         public const string TCP_HOST = "127.0.0.1";
         //public const string TCP_HOST = "47.115.227.169";
@@ -28,7 +28,7 @@ namespace AGSyncCS
         public const int TCP_CONNECTION_TIMEOUT = 30000;
         
         // Logging Configuration
-        public const string LOG_FILE_PATH = "C:\\Users\\ls\\Documents\\AGLockstepCS\\server.log";
+        public const string LOG_FILE_PATH = "C:\\Users\\ls\\Documents\\AGSyncCS\\server.log";
         public const LogLevel DEFAULT_LOG_LEVEL = LogLevel.Debug;
         public const bool ENABLE_CONSOLE_OUTPUT = true;
         public const bool ENABLE_FILE_OUTPUT = true;

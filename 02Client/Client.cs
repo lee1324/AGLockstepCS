@@ -9,15 +9,13 @@ using System.IO;
 using System.Collections.Generic;
 using System.Net.Configuration;
 
-namespace AGSyncCS
-{
-
+namespace AGSyncCS{
     public partial class CM {//extend cm for client's usage
         public Action<SM> onResponse = null;
-        static TcpClientWrapper _Instance = null;
+        static Client _Instance = null;
         public static void InitConnection() {
             if (_Instance == null) {
-                _Instance = new TcpClientWrapper();
+                _Instance = new Client();
                 Logger.Instance.Debug("C TcpClientWrapper InitConnection IP:" + Config.TCP_HOST
                      + ":" + Config.TCP_SERVER_PORT);
                 _Instance.Connect(Config.TCP_HOST, Config.TCP_SERVER_PORT);
@@ -29,7 +27,7 @@ namespace AGSyncCS
         }
     }
   
-    internal class TcpClientWrapper
+    internal class Client
     {
         private System.Net.Sockets.TcpClient client;
         private NetworkStream stream;
@@ -40,7 +38,7 @@ namespace AGSyncCS
         private Thread receiveThread;
         private readonly object streamLock = new object();
 
-        public TcpClientWrapper(int timeout = 30000) {
+        public Client(int timeout = 30000) {
             this.timeout = timeout;
         }
 

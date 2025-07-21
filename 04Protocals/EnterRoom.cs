@@ -7,7 +7,7 @@ namespace AGSyncCS {
         //for remote network
         public string userID = "";
         public string userName = "";
-        public int roomID = 0;//toom to enter
+        public string roomID = "";//toom to enter
 
         //local network
         public string memberIP = "";//local IP of the user, used to connect to the room
@@ -25,7 +25,7 @@ namespace AGSyncCS {
         {
             userID = reader.ReadString();
             userName = reader.ReadString();
-            roomID = reader.ReadInt32();
+            roomID = reader.ReadString();
 
             memberIP = reader.ReadString();
         }

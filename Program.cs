@@ -23,24 +23,24 @@ namespace AGSyncCS
             Logger.Instance.Start();
             
             if(startTcpServer){
-                // Start TCP server in a background thread
+
+                //Step 00: owner starts game server in local wifi.
                 Thread tcpServerThread = new Thread(() => {
-                    TcpServer tcpServer = new TcpServer(Config.TCP_SERVER_PORT, 
+                    TCP_Server tcpServer = new TCP_Server(Config.TCP_SERVER_PORT, 
                         Config.TCP_MAX_CONNECTIONS, Config.TCP_CONNECTION_TIMEOUT);
                     tcpServer.Start();
-                
+
+                    //Step 01: owner creates a local room
+                    tcpServer.newLocalRoom("owner"); // Create a local room
                     // Keep TCP server running
                     while (true) Thread.Sleep(1000);
                 });
                 tcpServerThread.IsBackground = true;
                 tcpServerThread.Start();
+
+                
             }
 
-
-
-
-
-            
             // Start UDP server in a background thread (toggle)
             if (enableUdpServer) {
                 Thread udpServerThread = new Thread(() => {

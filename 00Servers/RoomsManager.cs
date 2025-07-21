@@ -54,12 +54,13 @@ namespace AGSyncCS {
         }
 
         public void init() {
+            Logger.Instance.Debug("wifi 模式, 不要用此类");
             _rooms = new Room[Config.MaxRooms];
             _ownerID2Room = new Dictionary<string, Room>(Config.MaxRooms);
 
             for (int i = 0; i < Config.MaxRooms; ++i) {
                 var n = new Room();
-                n.ID = i;
+                //n.ID = i;
                 _rooms[i] = n;
             }
 

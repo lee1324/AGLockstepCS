@@ -37,26 +37,31 @@ namespace AGSyncCS
          private static void Test_InLocalWifi()
          {
             Logger.Instance.Info("--- Testing Test_InLocalWifi---");
+            var localClients = new Client[Config.MaxPlayersPerRoom];
 
-            var localClients = new TcpClientWrapper[Config.MaxPlayersPerRoom];//1st as owner
-            for (int i = 0; i < localClients.Length; i++) {
+            for (int i = 0; i < localClients.Length; ++i) {
+                var idx = i;
                 Thread clientThread = new Thread(() => {
-                    localClients[i] = new TcpClientWrapper();
-                    localClients[i].Connect(Config.TCP_HOST, Config.TCP_SERVER_PORT);
+                    var c = new Client();
+                    //Step 13: client connects to server by RoomID(IP)
+                    c.Connect(Config.TCP_HOST, Config.TCP_SERVER_PORT);
+                    localClients[idx] = c;
                 });
                 clientThread.IsBackground = true;
                 clientThread.Start();
-            }
-            Thread.Sleep(1000);
+                Logger.Instance.Debug(string.Format("C Test_InLocalWifi Client {0} started", i));
 
-             for (int i = 0; i < Config.MaxPlayersPerRoom; ++i)
+                Thread.Sleep(3000);
+            }
+
+             for (int i = 0; i < localClients.Length; ++i)
              {
                  int clientId = i;
-                 
                  try {
-                     TcpClientWrapper client = localClients[4]; ;
-                         
+                     Client client = localClients[clientId];
                      var cm = new CM_EnterRoom();
+
+                     cm.roomID = "100001";
                      cm.userID = "autoTestUserID:" + i;
                      cm.onResponse = (s) => {
                          Logger.Instance.Debug("C NewRoom Response:" + s.ToString());
@@ -95,7 +100,7 @@ namespace AGSyncCS
                 {
                     try
                     {
-                        TcpClientWrapper client = new TcpClientWrapper();
+                        Client client = new Client();
                         client.Connect(Config.TCP_HOST, Config.TCP_SERVER_PORT);
                         
                         for (int j = 1; j <= 2; j++)
@@ -138,7 +143,7 @@ namespace AGSyncCS
                 {
                     try
                     {
-                        TcpClientWrapper client = new TcpClientWrapper();
+                        Client client = new Client();
                         client.Connect(Config.TCP_HOST, Config.TCP_SERVER_PORT);
 
                         
@@ -178,7 +183,7 @@ namespace AGSyncCS
                 {
                     try
                     {
-                        TcpClientWrapper client = new TcpClientWrapper();
+                        Client client = new Client();
                         client.Connect(Config.TCP_HOST, Config.TCP_SERVER_PORT);
                         
                         Logger.Instance.Info(string.Format("Connection {0} established successfully", clientId));

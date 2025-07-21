@@ -11,7 +11,7 @@ using System.Diagnostics;
 
 namespace AGSyncCS
 {
-    public partial class TcpServer {
+    public partial class TCP_Server {
 
         private TcpListener listener;
         private bool isRunning;
@@ -22,7 +22,7 @@ namespace AGSyncCS
         private int maxConnections;
         private int connectionTimeout;
 
-        public TcpServer(int port, int maxConnections = 100, int connectionTimeout = 30000)
+        public TCP_Server(int port, int maxConnections = 100, int connectionTimeout = 30000)
         {
             this.port = port;
             this.maxConnections = maxConnections;

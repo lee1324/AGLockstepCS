@@ -19,14 +19,14 @@ namespace AGSyncCS {
 
     public class SM_NewRoom : SM
     {
-        public int roomID;
+        public string roomID;
 
         public override void writeTo(BinaryWriter writer) {
             writer.Write(roomID);
         }
 
         public override void readFrom(BinaryReader reader) {
-            roomID = reader.ReadInt32();
+            roomID = reader.ReadString();
         }
 
         public override string ToString() {
