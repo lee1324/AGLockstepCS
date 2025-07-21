@@ -115,7 +115,7 @@ namespace AGSyncCS{
         void _heatBeatLoop() {
             while(isConnected) {
                 try {
-                    var cm = new CM_HeartBeat();
+                    var cm = new CM_HeartBeat();//heratBeat is more like a INNER MESSAGE
                     cm.lastBeatTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
                     cm.onResponse = (sm_response) => {
                         var sm = (SM_HeartBeat)sm_response;
@@ -151,7 +151,7 @@ namespace AGSyncCS{
                     ms.Seek(0, SeekOrigin.Begin);
                     var iMessageType = reader.ReadInt32();
                     var protocal = reader.ReadInt32();
-                    Logger.Log(LogLevel.Debug, "C iMessageType:" + iMessageType + " protocal:" + protocal);
+                    //Logger.Debug("C iMessageType:" + iMessageType + " protocal:" + protocal);
 
                     if (iMessageType == (int)eMessageType.Push) ;//lstodo
                     else if (iMessageType == (int)eMessageType.Response)

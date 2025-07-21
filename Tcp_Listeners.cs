@@ -22,6 +22,14 @@ namespace AGSyncCS {
             //step 02: tell other clients of owner's roomID
             Logger.Info("roomID:" + localRoom.ID);
         }
+
+        /// <summary>
+        /// Step 05
+        /// tell other clients(self included) to load
+        /// </summary>
+        public void startLoad() {
+
+        }
     }
 
     partial class TcpClientConnection {
@@ -91,7 +99,7 @@ namespace AGSyncCS {
             var roomID = cm.roomID;
             var localRoom = TCP_Server.Instance.localRoom;
             if (roomID == localRoom.ID) {
-                //step 04: remove user from local room
+                //step 04: join or remove user from local room
                 if (localRoom.usersConnections[cm.pos] != null &&
                     localRoom.usersConnections[cm.pos].remoteEndPoint.ToString() == this.remoteEndPoint.ToString()) {
                     localRoom.usersConnections[cm.pos] = null;
@@ -114,9 +122,6 @@ namespace AGSyncCS {
             sm_response = s;//set reponse to client
         }
 
-
-
-  
      
     }
 }

@@ -68,6 +68,7 @@ namespace AGSyncCS
                  int clientId = i;
                  try {
                      Client client = localClients[clientId];
+                    //Step 03: client join the room
                      var cm = new CM_EnterRoom();
 
                      cm.pos = client.pos; // Set position for the client
