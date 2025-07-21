@@ -115,15 +115,15 @@ namespace AGSyncCS{
         void _heatBeatLoop() {
             while(isConnected) {
                 try {
-                    Thread.Sleep(Config.HEARTBEAT_INTERVAL);
                     var cm = new CM_HeartBeat();
                     cm.lastBeatTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-                    cm.onResponse = (sm) => {
-                        var sm_heartbeat = (SM_HeartBeat)sm;
-                        Logger.Debug("C HeartBeat Response:" + sm_heartbeat.lastBeatTime);
+                    cm.onResponse = (sm_response) => {
+                        var sm = (SM_HeartBeat)sm_response;
+                        Logger.Debug("C HeartBeat Response:" + sm.lastBeatTime);
                     };
 
                     this.Send(cm);
+                    Thread.Sleep(Config.HEARTBEAT_INTERVAL);
                 }
                 catch (Exception ex) {
                     Logger.Error("C Error in heartbeat loop: " + ex.Message);
@@ -138,6 +138,7 @@ namespace AGSyncCS{
         {
             byte[] buffer = new byte[Config.BUFFER_SIZE];
             var ms = new MemoryStream(buffer);
+            var reader = new BinaryReader(ms);
             while (isConnected) {
                 try {
                     //bytesRead = 4096(max size), why?
@@ -147,7 +148,7 @@ namespace AGSyncCS{
                         Logger.Info("Server call Close() or ShutDown()");
                         break;
                     }
-                    var reader = new BinaryReader(ms);
+                    ms.Seek(0, SeekOrigin.Begin);
                     var iMessageType = reader.ReadInt32();
                     var protocal = reader.ReadInt32();
                     Logger.Log(LogLevel.Debug, "C iMessageType:" + iMessageType + " protocal:" + protocal);

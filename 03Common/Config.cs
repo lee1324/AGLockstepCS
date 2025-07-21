@@ -5,11 +5,11 @@ namespace AGSyncCS
 {
     public static partial class Config
     {
-        public static int MaxPlayersPerRoom = 4;
+        public static int MaxPlayersPerRoom = 2;
         public static int MaxRooms = 10;
         public static string TCP_HOST = "127.0.0.1";
 
-        public static int HEARTBEAT_INTERVAL = 30000;
+        public static int HEARTBEAT_INTERVAL = 3000;
 
         public static string UDP_HOST = "127.0.0.1";
         //public const string TCP_HOST = "47.115.227.169";

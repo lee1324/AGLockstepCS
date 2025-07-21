@@ -18,9 +18,12 @@ namespace AGSyncCS {
         {
             lastBeatTime = reader.ReadString(); 
         }
+        public override string ToString() {
+            return lastBeatTime;
+        }
     }
 
-    public class SM_HeatBeat : SM
+    public class SM_HeartBeat : SM
     {
         public string lastBeatTime;//send back to client
 
@@ -31,6 +34,10 @@ namespace AGSyncCS {
         public override void readFrom(BinaryReader reader)
         {
             lastBeatTime = reader.ReadString(); 
+        }
+
+        public override string ToString() {
+            return lastBeatTime;
         }
 
     }

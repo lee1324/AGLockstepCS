@@ -131,7 +131,7 @@ namespace AGSyncCS {
         }
 
         //前端不记录状态，加上后端还有push，所以protocal必须
-        public void Response(int protocal, int messasgeUID, int errorCode, SM sm) {
+        public void Response(int protocal, int messageUID, int errorCode, SM sm) {
             if (!isConnected)
                 throw new InvalidOperationException("Connection is not active");
 
@@ -145,15 +145,17 @@ namespace AGSyncCS {
 
                     writer.Write((int)eMessageType.Response);
                     writer.Write(protocal);
-                    writer.Write(messasgeUID);
+                    writer.Write(messageUID);
                     writer.Write(errorCode);//在push时无errorcode，但是push也用这套，省（个接口+推送判断）
+                    Logger.Debug(string.Format("Before s2c protocal:{0} msgUID:{1} errorCode:{2}",
+                        protocal, messageUID, errorCode));
 
                     if (errorCode == ErrorCode.None){
                         if (sm == null) Logger.Warning("errorCode or sm, U forgot 2 set one of 'em!!!");
                         else {
                             sm.writeTo(writer);
                             stream.Write(buffer, 0, (int)ms.Length);
-                            Logger.Debug(string.Format("S 2C {0}: {1}", remoteEndPoint, sm.ToString()));
+                            Logger.Debug(string.Format("S2C {0}: {1}", remoteEndPoint, sm.ToString()));
                         }
                     }
                 }

@@ -107,6 +107,8 @@ namespace AGSyncCS
                  Thread.Sleep(1000);
                  TCP_Server.Instance.localRoom.printState();
              }
+
+             //Logger.Debug("--- Test Heartbeat ---");
         }
         
         private static void TestSingleClient()

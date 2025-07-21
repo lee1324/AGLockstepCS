@@ -37,7 +37,7 @@ namespace AGSyncCS {
                 on((CM_QuitRoom)cm, ref errorCode, ref sm_response);
             
             else if (protocal == Protocals.Heartbeat) {
-                //heartbeat, no response
+                on((CM_HeartBeat)cm, ref errorCode, ref sm_response);
             }
             //} else if (protocal == Protocals.ServerError) {
             //    on((CM_ServerError)cm, ref errorCode, ref sm_response);
@@ -47,6 +47,12 @@ namespace AGSyncCS {
             //    Logger.Error("Unknown protocal: " + protocal);
             //    errorCode = ErrorCode.UnknownProtocal;
             //}
+        }
+
+        void on(CM_HeartBeat cm, ref int errorCode, ref SM sm_response) {
+            var sm = new SM_HeartBeat();
+            sm.lastBeatTime = cm.lastBeatTime;
+            sm_response = sm;
         }
 
         //None in local network/Wifi

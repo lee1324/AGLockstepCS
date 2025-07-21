@@ -58,6 +58,11 @@ namespace AGSyncCS
             Thread.Sleep(3000);
             
             TcpServerClientTest.RunTest();
+
+            while (true) {
+                // Keep the main thread alive to allow servers to run
+                Thread.Sleep(1000);
+            }
             
             Logger.Info("All tests completed. Press any key to stop servers...");
             Console.ReadKey();

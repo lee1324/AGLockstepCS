@@ -28,16 +28,19 @@ namespace AGSyncCS {
         {
             int p = None;
             var cmType = cm.GetType();
-            if(cmType == typeof(CM_Test)) p = Test;
+            if (cmType == typeof(CM_HeartBeat)) p = Heartbeat;
+            else if(cmType == typeof(CM_Test)) p = Test;
             else if(cmType == typeof(CM_NewRoom)) p = NewRoom;
             else if(cmType == typeof(CM_EnterRoom)) p = EnterRoom;
             else if(cmType == typeof(CM_QuitRoom)) p = QuitRoom;
+            
             return p;
         }
 
-        public static CM GetCM(int protocal)//lstodo use factory
+        public static CM GetCM(int protocal)
         {
-            if (protocal == Test) return new CM_Test();
+            if (protocal == Heartbeat) return new CM_HeartBeat();
+            else if (protocal == Test) return new CM_Test();
             else if (protocal == NewRoom) return new CM_NewRoom();
             else if (protocal == EnterRoom) return new CM_EnterRoom();
             else if(protocal == QuitRoom) return new CM_QuitRoom();
@@ -45,7 +48,8 @@ namespace AGSyncCS {
         }
 
         public static SM GetSM(int protocal) {
-            if (protocal == Test) return new SM_Test();
+            if (protocal == Heartbeat) return new SM_HeartBeat();
+            else if (protocal == Test) return new SM_Test();
             else if (protocal == NewRoom) return new SM_NewRoom();
             else if (protocal == EnterRoom) return new SM_EnterRoom();
             else if (protocal == QuitRoom) return new SM_QuitRoom();
