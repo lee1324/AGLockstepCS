@@ -26,6 +26,8 @@ namespace AGSyncCS
         private int maxConnections;
         private int connectionTimeout;
 
+        private UdpServer _udpServer;
+
         public BandServer()
         {
             if (Instance == null) Instance = this;
@@ -38,19 +40,9 @@ namespace AGSyncCS
             newRoom("my room"); // Create a local room
         }
 
-        public void start() {
-            //Step 00: owner starts server in local wifi.
-            Thread tcpServerThread = new Thread(() => {
-                _start();
-                //Step 01: owner creates a local room
-                // Keep TCP server running
-                while (true) Thread.Sleep(1000);
-            });
-            tcpServerThread.IsBackground = true;
-            tcpServerThread.Start();
-        }
+ 
 
-        public void _start()
+        public void start()
         {
             if (isRunning)
                 return;
@@ -66,6 +58,9 @@ namespace AGSyncCS
                 serverThread.Start();
 
                 Logger.Info(string.Format("TCP server:{0}", port));
+                //prepare a udp server inside
+                _udpServer = new UdpServer(Config.UDP_SERVER_PORT, Config.UDP_ECHO_ENABLED);
+                _udpServer.start();
             }
             catch (Exception ex)
             {

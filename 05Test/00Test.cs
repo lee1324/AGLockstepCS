@@ -164,6 +164,20 @@ namespace AGSyncCS
                 t.Start();
             }
 
+            if (true) {
+                var c = clients[0];
+                if (true) {
+                    CM_Sync cm = new CM_Sync();
+                    cm.pos = 0;
+                    cm.syncData = "test as dateTime:" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                    cm.onResponse = (resp) => {
+                        Logger.Info("C Sync Response:" + resp.ToString());
+                    };
+                    c.send(cm);
+                }
+                Thread.Sleep(20000);
+            }
+
              //Logger.Debug("--- Test Heartbeat ---");
         }
         

@@ -14,26 +14,13 @@ namespace AGSyncCS
         private IPEndPoint serverEndPoint;
         private bool isConnected;
 
-        public UdpClientWrapper()
+        public UdpClientWrapper(string serverIP, int port)
         {
             udpClient = new System.Net.Sockets.UdpClient();
-            isConnected = false;
-        }
-
-        public void Connect(string serverIP, int port)
-        {
             serverEndPoint = new IPEndPoint(IPAddress.Parse(serverIP), port);
             isConnected = true;
             Logger.Info(string.Format("Connected to UDP server at {0}:{1}", serverIP, port));
         }
-
-        public void Connect(IPAddress serverIP, int port)
-        {
-            serverEndPoint = new IPEndPoint(serverIP, port);
-            isConnected = true;
-            Logger.Info(string.Format("Connected to UDP server at {0}:{1}", serverIP, port));
-        }
-
 
         byte[] _sendBuffer = null;
         MemoryStream _sendMS = null;
@@ -42,8 +29,9 @@ namespace AGSyncCS
         static int GlobalUID = 0;
         Dictionary<int, Action<SM>> _listeners = null;
 
-        void _send(CM cm, int timeoutMs = 5000)
+        void _send(CM cm, int timeoutMs = 50000)//lstodo  set 50000 to 5000
         {
+            ++GlobalUID;
             if (!isConnected)
             {
                 throw new InvalidOperationException("Not connected to server");
@@ -63,7 +51,7 @@ namespace AGSyncCS
                 int protocal = Protocals.Sync;
 
                 _writer.Write(protocal);
-                _writer.Write(GlobalUID++);
+                _writer.Write(GlobalUID);
                 cm.writeTo(_writer);
             }
 
@@ -75,24 +63,27 @@ namespace AGSyncCS
             {
                 udpClient.Client.ReceiveTimeout = timeoutMs;
                 IPEndPoint remoteEP = new IPEndPoint(IPAddress.Parse(Config.ANY_ADDRESS), 0);
-
                 byte[] responseData = udpClient.Receive(ref remoteEP);
-
                 BinaryReader reader = new BinaryReader(new MemoryStream(responseData));
+
                 int protocal   = reader.ReadInt32();
                 int messageUID = reader.ReadInt32();
-                var sm = Protocals.GetSM(protocal);
+                int errorCode  = reader.ReadInt32();
 
-                if (sm == null){
-                    Logger.Error("Received unknown protocol: " + protocal);
-                    return;
+                if (errorCode == ErrorCode.None) {
+                    var sm = Protocals.GetSM(protocal);
+                    if (sm == null){
+                        Logger.Error("Received unknown protocol: " + protocal);
+                        return;
+                    }
+                    sm.readFrom(reader);
+                    if (_listeners.ContainsKey(messageUID)) {
+                        var ls = _listeners[messageUID];
+                        ls(sm);
+                        _listeners.Remove(messageUID);
+                    }
                 }
-                sm.readFrom(reader);
-                if (_listeners.ContainsKey(messageUID)) {
-                    var ls = _listeners[messageUID];
-                    ls(sm);
-                    _listeners.Remove(messageUID);
-                }
+                else ;//lstodo
             }
             catch (SocketException ex) {
                 if (ex.SocketErrorCode == SocketError.TimedOut) {

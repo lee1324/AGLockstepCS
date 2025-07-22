@@ -5,8 +5,8 @@ using System.Linq;
 using System.Text;
 
 namespace AGSyncCS {
-      public partial class BandServer{ 
-              /// <summary>
+        public partial class BandServer{ 
+        /// <summary>
         /// use this in local network(created by owner
         /// </summary>
         public Room room = null;
@@ -42,9 +42,9 @@ namespace AGSyncCS {
                 on((CM_NewRoom)cm, ref errorCode, ref sm_response);
             else if (protocal == Protocals.EnterRoom)
                 on((CM_EnterRoom)cm, ref errorCode, ref sm_response);
+
             else if (protocal == Protocals.QuitRoom)
                 on((CM_QuitRoom)cm, ref errorCode, ref sm_response);
-
             else if (protocal == Protocals.Heartbeat)
                 on((CM_HeartBeat)cm, ref errorCode, ref sm_response);
             else if (protocal == Protocals.LoadingProgress)
@@ -120,6 +120,9 @@ namespace AGSyncCS {
                 sm.usersLoadingProgress0_100[i] = BandServer.Instance.room.loadingProgresses0_100[i];
             }
             sm_response = sm;
+
+            if (sm.allCompleted) {
+            }
         }
 
         void on(CM_Test cm, ref int errorCode, ref SM sm_response) {
@@ -130,5 +133,18 @@ namespace AGSyncCS {
         }
 
      
+    }
+
+    partial class UdpServer {
+        public string syncData = "";//last valid syncData;
+        void on(CM_Sync cm , ref int errorCode, ref SM sm_response) {
+            if(cm.pos == 0) {//owner
+                syncData = cm.syncData;
+            }
+            var sm = new SM_Sync();
+            sm.syncData = syncData;
+
+            sm_response = sm;
+        }
     }
 }

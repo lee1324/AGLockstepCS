@@ -3,10 +3,11 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
+using System.IO;
 
 namespace AGSyncCS
 {
-    public class UdpServer
+    public partial class UdpServer
     {
         private int port;
         private UdpClient udpClient;
@@ -21,8 +22,8 @@ namespace AGSyncCS
             this.isRunning = false;
         }
 
-        public void Start()
-        {
+         public void start()
+         {
             if (isRunning)
                 return;
 
@@ -56,14 +57,38 @@ namespace AGSyncCS
                 try
                 {
                     byte[] data = udpClient.Receive(ref remoteEP);
-                    string message = Encoding.UTF8.GetString(data);
-                    Logger.Info(string.Format("Received from {0}: {1}", remoteEP, message));
+                    var reader = new BinaryReader(new MemoryStream(data));
+                    
+                    int protocal = reader.ReadInt32();
+                    int messageUID = reader.ReadInt32();
 
-                    if (echoBack)
+                    var cm = Protocals.GetCM(protocal);
+                    if(cm == null) {
+                        Logger.Warning("CM not found by protocal:" + protocal);
+                        continue;
+                    }
+                    cm.readFrom(reader);
+
+                    int errorCode = ErrorCode.None;
+                    SM sm = null;
+                    if(cm.GetType() == typeof(CM_Sync)) {//dispatch()
+                        on((CM_Sync)cm, ref errorCode, ref sm);
+                    }
+
+                    var sendBuffer = new byte[Config.BUFFER_SIZE];
+                    var ms = new MemoryStream(sendBuffer);
+                    var writer = new BinaryWriter(ms);
+                    writer.Write(protocal);
+                    writer.Write(messageUID);
+                    writer.Write(errorCode);
+                    
+                    if (errorCode == ErrorCode.None)
                     {
-                        byte[] echoData = Encoding.UTF8.GetBytes("Echo: " + message);
-                        udpClient.Send(echoData, echoData.Length, remoteEP);
-                        Logger.Debug(string.Format("Echoed back to {0}", remoteEP));
+                        if (sm == null) Logger.Warning("errorCode or sm, U forgot 2 set one of 'em!!!");
+                        else{
+                            sm.writeTo(writer);
+                            udpClient.Send(sendBuffer, (int)ms.Position, remoteEP);
+                        }
                     }
                 }
                 catch (SocketException)

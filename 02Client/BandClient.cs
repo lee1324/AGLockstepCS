@@ -20,6 +20,7 @@ namespace AGSyncCS {
         public BandClient start() {
              var serverIP = Tools.RoomID2IP(roomID);
             _tcpClient = new TCPClientWrapper().start(serverIP, Config.TCP_SERVER_PORT);
+            _udpClient = new UdpClientWrapper(serverIP, Config.UDP_SERVER_PORT);
             return this;
         }
         public void send(CM cm) {

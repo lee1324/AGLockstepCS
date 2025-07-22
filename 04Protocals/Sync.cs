@@ -6,12 +6,18 @@ using System.Text;
 
 namespace AGSyncCS {
     public class CM_Sync : CM {
-        public string syncData;//js string is recommended.
+        /// <summary>
+        /// 目前房主发0是会被server缓存的，其他成员发自己的位置（但不会被server记住）
+        /// </summary>
+        public int pos;
+        public string syncData = "";//js string is recommended.
         public override void writeTo(BinaryWriter writer) {
+            writer.Write(pos);
             writer.Write(syncData);
         }
 
         public override void readFrom(BinaryReader reader) {
+            pos = reader.ReadInt32();
             syncData = reader.ReadString(); 
         }
 
