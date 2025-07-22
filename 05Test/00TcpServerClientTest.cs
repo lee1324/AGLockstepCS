@@ -39,34 +39,33 @@ namespace AGSyncCS
             Logger.Info("--- Testing Test_InLocalWifi ---");
             Logger.Info("--- Master Slaves Mode ---");
 
-            var localClients = new Client[Config.MaxPlayersPerRoom];
+            var clients = new Client[Config.MaxPlayersPerRoom];
             //owner is clients[0], ignore localClients[0]
 
             const string roomID = "007024";//for test in A285
 
-             for (int i = 1; i < localClients.Length; ++i) {
-                var client = new Client().start(roomID, i);
-                localClients[i] = client;
-                Logger.Debug(string.Format("C Test_InLocalWifi Client {0} started", i));
+            Logger.Info("--- client starts one by one ---");
+            for (int i = 0; i < clients.Length; ++i) {
+                clients[i] = new Client().start(roomID, i);
+                
+                Logger.Info(string.Format("C Test_InLocalWifi Client {0} started", i));
+                Thread.Sleep(100);
+             }
 
-            }
-            Thread.Sleep(1000);
-
-            for (int i = 1; i < localClients.Length; ++i) {
-                localClients[i].onPush(Protocals.StartLoading, (sm) => {
-                    Logger.Debug("成员开始加载曲谱:" + sm);
+            for (int i = 0; i < clients.Length; ++i) {
+                clients[i].onPush(Protocals.StartLoading, (sm) => {
+                    Logger.Info("todo:房主点开始了，成员开始加载曲谱:" + sm);
                 });
-
             }
             Thread.Sleep(1000);
 
             Logger.Debug("\n");
             Logger.Debug("--- Test EnterRoom ---");
-             for (int i = 1; i < localClients.Length; ++i)
+             for (int i = 0; i < clients.Length; ++i)
              {
                  int clientId = i;
                  try {
-                     Client client = localClients[clientId];
+                     Client client = clients[clientId];
                     //Step 03: client join the room
                      var cm = new CM_EnterRoom();
 
@@ -89,11 +88,11 @@ namespace AGSyncCS
 
              Logger.Debug("\n");
              Logger.Debug("--- Test QuitRoom ---");
-             for (int i = 1; i < localClients.Length; ++i)
+             for (int i = 1; i < clients.Length; ++i)
              {
                  int clientId = i;
                  try {
-                     Client client = localClients[clientId];
+                     Client client = clients[clientId];
                      var cm = new CM_QuitRoom();
 
                      cm.pos = client.pos; // Set position for the client
@@ -112,11 +111,11 @@ namespace AGSyncCS
 
              Logger.Debug("\n");
              Logger.Debug("--- Test EnterRoom Again ---");
-             for (int i = 1; i < localClients.Length; ++i)
+             for (int i = 1; i < clients.Length; ++i)
              {
                  int clientId = i;
                  try {
-                     Client client = localClients[clientId];
+                     Client client = clients[clientId];
                     //Step 03: client join the room
                      var cm = new CM_EnterRoom();
 
@@ -139,22 +138,27 @@ namespace AGSyncCS
             Thread.Sleep(1000);
             TCP_Server.Instance.notifyStartLoading();
             Thread.Sleep(1000);
-            for(int i = 1; i < localClients.Length; ++i){
-                var client = localClients[i];
+            for(int i = 0; i < clients.Length; ++i){
+                var client = clients[i];
                 Thread t = new Thread(() => {
-                    var cm = new CM_LoadingProgress();
-                    cm.pos = client.pos;
-                    cm.progress0_100 = 0;
-                    cm.onResponse = (resp) => {
-                        var sm = (SM_LoadingProgress)resp;
-                        Logger.Info("c " + sm);
-                        Logger.Info("todo Refresh UI Progress Now " + sm.getTotalProgress0_1f());
-                    };
-                    while( cm.progress0_100 <= 100) {
-                        ++cm.progress0_100;
+                    int progress0_100 = 0;
+                    while(progress0_100 <= 100) {
+                        ++progress0_100;
+
+                        var cm = new CM_LoadingProgress();
+                        cm.pos = client.pos;
+                        cm.progress0_100 = progress0_100;
+
+                        cm.onResponse = (resp) => {
+                            var sm = (SM_LoadingProgress)resp;
+                            Logger.Info("todo Refresh UI Progress Now " + sm.getTotalProgress0_1f());
+                            if (sm.allCompleted) {
+                                Logger.Info("Loading completed for all clients.");
+                            }
+                        };
 
                         client.Send(cm);
-                        Thread.Sleep(100);
+                        Thread.Sleep(30);
                     }
                 });
                 t.IsBackground = true;

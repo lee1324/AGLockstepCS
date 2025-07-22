@@ -30,6 +30,7 @@ namespace AGSyncCS {
     {
         /// <summary>
         /// 所有玩家的加载总进度
+        /// 100表示加载完成
         /// </summary>
         public int[] usersLoadingProgress0_100;
         public override void readFrom(BinaryReader reader)
@@ -62,7 +63,27 @@ namespace AGSyncCS {
             foreach(var v in usersLoadingProgress0_100) {
                 num += v;
             }
-            return num/den;
+            var clamp = num/den;
+            if (clamp >= 1f) clamp = 1f;
+            return clamp;
+        }
+
+        /// <summary>
+        /// 所有人都加载完成了吗？
+        /// </summary>
+        /// <returns></returns>
+        public bool allCompleted
+        {
+            get {
+                if (usersLoadingProgress0_100 == null || usersLoadingProgress0_100.Length == 0)
+                    return false;
+                foreach (var progress in usersLoadingProgress0_100)
+                {
+                    if (progress < 100)
+                        return false;
+                }
+                return true;
+            }
         }
 
         public override string ToString()
