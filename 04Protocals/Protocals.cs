@@ -17,6 +17,9 @@ namespace AGSyncCS {
         public const int EnterRoom = 52;
         public const int QuitRoom  = 53;//客户端退出房间
 
+        public const int StartLoading = 54;//server push message to clients to start loading
+        public const int LoadingProgress = 55;
+
 
         /// <summary>
         /// 发送cm前要先发它的protocal
@@ -33,7 +36,15 @@ namespace AGSyncCS {
             else if(cmType == typeof(CM_NewRoom)) p = NewRoom;
             else if(cmType == typeof(CM_EnterRoom)) p = EnterRoom;
             else if(cmType == typeof(CM_QuitRoom)) p = QuitRoom;
-            
+            else if(cmType == typeof(CM_LoadingProgress)) p = LoadingProgress;
+            return p;
+        }
+
+        //for push only
+        public static int GetProtocal(SM sm) {
+            int p = None;
+            var smType = sm.GetType();
+            if(smType == typeof(SM_StartLoading)) p = StartLoading;
             return p;
         }
 
@@ -43,7 +54,8 @@ namespace AGSyncCS {
             else if (protocal == Test) return new CM_Test();
             else if (protocal == NewRoom) return new CM_NewRoom();
             else if (protocal == EnterRoom) return new CM_EnterRoom();
-            else if(protocal == QuitRoom) return new CM_QuitRoom();
+            else if (protocal == QuitRoom) return new CM_QuitRoom();
+            else if (protocal == LoadingProgress) return new CM_LoadingProgress();
             return null;
         }
 
@@ -53,6 +65,8 @@ namespace AGSyncCS {
             else if (protocal == NewRoom) return new SM_NewRoom();
             else if (protocal == EnterRoom) return new SM_EnterRoom();
             else if (protocal == QuitRoom) return new SM_QuitRoom();
+            else if (protocal == StartLoading) return new SM_StartLoading();
+            else if (protocal == LoadingProgress) return new SM_LoadingProgress();
             return null;
         }
     }   

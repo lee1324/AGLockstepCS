@@ -12,28 +12,45 @@ using System.Diagnostics;
 namespace AGSyncCS
 {
     public partial class TCP_Server {
+
         public static TCP_Server Instance;
+        
         private TcpListener listener;
         private bool isRunning;
         private int port;
+
         private Thread serverThread;
         private List<TcpClientConnection> activeConnections;
         private readonly object connectionsLock = new object();
+        
         private int maxConnections;
         private int connectionTimeout;
 
-        public TCP_Server(int port, int maxConnections = 100, int connectionTimeout = 30000)
+        public TCP_Server()
         {
             if (Instance == null) Instance = this;
             else Logger.Error("TCP_Server instance already exists, using singleton pattern");
-            this.port = port;
-            this.maxConnections = maxConnections;
-            this.connectionTimeout = connectionTimeout;
+            this.port = Config.TCP_SERVER_PORT;
+            this.maxConnections = Config.TCP_MAX_CONNECTIONS;
+            this.connectionTimeout = Config.TCP_CONNECTION_TIMEOUT;
             this.isRunning = false;
             this.activeConnections = new List<TcpClientConnection>();
+            newRoom("my room"); // Create a local room
         }
 
-        public void Start()
+        public void start() {
+            //Step 00: owner starts server in local wifi.
+            Thread tcpServerThread = new Thread(() => {
+                _start();
+                //Step 01: owner creates a local room
+                // Keep TCP server running
+                while (true) Thread.Sleep(1000);
+            });
+            tcpServerThread.IsBackground = true;
+            tcpServerThread.Start();
+        }
+
+        public void _start()
         {
             if (isRunning)
                 return;
@@ -61,7 +78,6 @@ namespace AGSyncCS
         {
             if (!isRunning)
                 return;
-
             isRunning = false;
 
             // Close all active connections

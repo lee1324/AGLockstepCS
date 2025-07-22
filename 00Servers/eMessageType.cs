@@ -2,8 +2,8 @@ namespace AGSyncCS
 {
     enum eMessageType
     {
-        Push = 0,
-        Response = 1
+        Push = 10,
+        Response = 20
     }
 
     public enum eRoomState {

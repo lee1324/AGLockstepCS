@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Runtime.Remoting.Channels;
 using System.Text;
 
@@ -17,6 +18,8 @@ namespace AGSyncCS {
         /// </summary>
         public TcpClientConnection[] usersConnections;//used in local wifi
         public string[] usersNames;
+        public int[] loadingProgresses0_100;
+
 
         public eRoomState roomState;
         public DateTime startTime;
@@ -30,7 +33,15 @@ namespace AGSyncCS {
             roomState = eRoomState.Idle;
             startTime = DateTime.Now;
             usersConnections = new TcpClientConnection[Config.MaxPlayersPerRoom];
+
             usersNames = new string[Config.MaxPlayersPerRoom];
+            loadingProgresses0_100 = new int[Config.MaxPlayersPerRoom];
+        }
+
+        public void resetLoadingProgresses() {
+            for(int i = 0; i < loadingProgresses0_100.Length; ++i) {
+                loadingProgresses0_100[i] = 0;
+            }
         }
 
         public void printState() {

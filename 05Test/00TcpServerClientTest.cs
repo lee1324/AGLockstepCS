@@ -36,7 +36,9 @@ namespace AGSyncCS
 
          private static void Test_InLocalWifi()
          {
-            Logger.Info("--- Testing Test_InLocalWifi---");
+            Logger.Info("--- Testing Test_InLocalWifi ---");
+            Logger.Info("--- Master Slaves Mode ---");
+
             var localClients = new Client[Config.MaxPlayersPerRoom];
             //owner is clients[0], ignore localClients[0]
 
@@ -54,6 +56,11 @@ namespace AGSyncCS
                     //Step 03: client connects to server by RoomID(IP)
                     client.Connect(ownerIP, Config.TCP_SERVER_PORT);
                     localClients[idx] = client;
+
+
+                    client.onPush(Protocals.StartLoading, (sm) => {
+                        Logger.Debug("Client. onPushMessage:" + sm);
+                    });
                 });
                 clientThread.IsBackground = true;
                 clientThread.Start();
@@ -62,7 +69,55 @@ namespace AGSyncCS
             }
             Thread.Sleep(1000);
 
-            Logger.Debug("--- Test EnterRoom ---");
+            Logger.Debug("\n--- Test EnterRoom ---");
+             for (int i = 1; i < localClients.Length; ++i)
+             {
+                 int clientId = i;
+                 try {
+                     Client client = localClients[clientId];
+                    //Step 03: client join the room
+                     var cm = new CM_EnterRoom();
+
+                     cm.pos = client.pos; // Set position for the client
+                     cm.roomID = client.roomID;
+                     cm.nickname = client.nickname; // Set a nickname for the client
+
+                     cm.onResponse = (s) => {
+                         Logger.Debug("C NewRoom Response:" + s.ToString());//enter success
+                     };
+                     client.Send(cm);
+                 }
+                 catch (Exception ex) {
+                     Logger.Error(string.Format("ClientId {0} Error: {1}", clientId, ex.Message));
+                 }
+                 Thread.Sleep(1000);
+                 TCP_Server.Instance.room.printState();
+             }
+
+
+             Logger.Debug("--- Test QuitRoom ---");
+             for (int i = 1; i < localClients.Length; ++i)
+             {
+                 int clientId = i;
+                 try {
+                     Client client = localClients[clientId];
+                     var cm = new CM_QuitRoom();
+
+                     cm.pos = client.pos; // Set position for the client
+                     cm.roomID = client.roomID;
+                     cm.onResponse = (s) => {
+                         Logger.Debug("C QuitRoom Response:" + s.ToString());//enter success
+                     };
+                     client.Send(cm);
+                 }
+                 catch (Exception ex) {
+                     Logger.Error(string.Format("ClientId {0} Error: {1}", clientId, ex.Message));
+                 }
+                 Thread.Sleep(1000);
+                 TCP_Server.Instance.room.printState();
+             }
+
+             Logger.Debug("\n--- Test EnterRoom Again ---");
              for (int i = 1; i < localClients.Length; ++i)
              {
                  int clientId = i;
@@ -84,30 +139,33 @@ namespace AGSyncCS
                      Logger.Error(string.Format("ClientId {0} Error: {1}", clientId, ex.Message));
                  }
                  Thread.Sleep(1000);
-                 TCP_Server.Instance.localRoom.printState();
+                 TCP_Server.Instance.room.printState();
             }
 
-             Logger.Debug("--- Test QuitRoom ---");
-             for (int i = 1; i < localClients.Length; ++i)
-             {
-                 int clientId = i;
-                 try {
-                     Client client = localClients[clientId];
-                     var cm = new CM_QuitRoom();
+            Thread.Sleep(1000);
+            TCP_Server.Instance.notifyStartLoading();
+            Thread.Sleep(1000);
+            for(int i = 1; i < localClients.Length; ++i){
+                var client = localClients[i];
+                Thread t = new Thread(() => {
+                    var cm = new CM_LoadingProgress();
+                    cm.pos = client.pos;
+                    cm.progress0_100 = 0;
+                    cm.onResponse = (resp) => {
+                        var sm = (SM_LoadingProgress)resp;
+                        Logger.Info("c " + sm);
+                        Logger.Info("todo Refresh UI Progress Now " + sm.getTotalProgress0_1f());
+                    };
+                    while( cm.progress0_100 <= 100) {
+                        ++cm.progress0_100;
 
-                     cm.pos = client.pos; // Set position for the client
-                     cm.roomID = client.roomID;
-                     cm.onResponse = (s) => {
-                         Logger.Debug("C QuitRoom Response:" + s.ToString());//enter success
-                     };
-                     client.Send(cm);
-                 }
-                 catch (Exception ex) {
-                     Logger.Error(string.Format("ClientId {0} Error: {1}", clientId, ex.Message));
-                 }
-                 Thread.Sleep(1000);
-                 TCP_Server.Instance.localRoom.printState();
-             }
+                        client.Send(cm);
+                        Thread.Sleep(100);
+                    }
+                });
+                t.IsBackground = true;
+                t.Start();
+            }
 
              //Logger.Debug("--- Test Heartbeat ---");
         }

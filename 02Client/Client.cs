@@ -74,7 +74,12 @@ namespace AGSyncCS{
         }
 
         byte[] sendBuffer = new byte[Config.BUFFER_SIZE];
-        Dictionary<int, Action<SM>> _listeners = new Dictionary<int, Action<SM>>();
+        Dictionary<int, Action<SM>> _pushListeners = new Dictionary<int, Action<SM>>();//Protocal - Action
+        Dictionary<int, Action<SM>> _listeners = new Dictionary<int, Action<SM>>();//MsgUID - Action
+
+        public void onPush(int protocal, Action<SM> action) {
+            _pushListeners[protocal] = action;
+        }
         public void Send(CM cm)
         {
             Logger.Debug("C Send() " + cm.ToString());
@@ -119,7 +124,7 @@ namespace AGSyncCS{
                     cm.lastBeatTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
                     cm.onResponse = (sm_response) => {
                         var sm = (SM_HeartBeat)sm_response;
-                        Logger.Debug("C HeartBeat Response:" + sm.lastBeatTime);
+                        //lstodo heartbeat
                     };
 
                     this.Send(cm);
@@ -153,7 +158,18 @@ namespace AGSyncCS{
                     var protocal = reader.ReadInt32();
                     //Logger.Debug("C iMessageType:" + iMessageType + " protocal:" + protocal);
 
-                    if (iMessageType == (int)eMessageType.Push) ;//lstodo
+                    SM sm = null;
+                    if (iMessageType == (int)eMessageType.Push) {
+                         sm = Protocals.GetSM(protocal);
+                         if(sm == null)
+                             Logger.Warning("SM not found by protocal:" + protocal);
+                         else {
+                             sm.readFrom(reader);
+                             Action<SM> ls;
+                             if(_pushListeners.TryGetValue(protocal, out ls)) 
+                                ls(sm);
+                         }
+                    }
                     else if (iMessageType == (int)eMessageType.Response)
                     {
                         var msgUID = reader.ReadInt32();
@@ -164,7 +180,7 @@ namespace AGSyncCS{
                             protocal, msgUID, errorCode));
 
                         if (errorCode == ErrorCode.None) {
-                            var sm = Protocals.GetSM(protocal);
+                            sm = Protocals.GetSM(protocal);
                             if(sm == null)
                                 Logger.Warning("SM not found by protocal:" + protocal);
                             else {

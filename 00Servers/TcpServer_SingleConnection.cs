@@ -107,16 +107,19 @@ namespace AGSyncCS {
             }
         }
 
-        public void Push(int protocal, SM sm) {
+        public void push(SM sm) {
             if (!isConnected)
                 throw new InvalidOperationException("Connection is not active");
             try
             {
                 byte[] buffer = new byte[Config.BUFFER_SIZE];
                 var ms = new MemoryStream(buffer);
-                var writer = new BinaryWriter(stream);
+                var writer = new BinaryWriter(ms);
+
                 ms.Seek(0, SeekOrigin.Begin);
                 writer.Write((int)eMessageType.Push);
+                int protocal = Protocals.GetProtocal(sm);
+
                 writer.Write(protocal);
                 sm.writeTo(writer);
                 lock (streamLock) {

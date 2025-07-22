@@ -3,26 +3,19 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 
-namespace Servers._04Protocals {
-   public class CM_StartPlay : CM
-    {
-        public override void writeTo(BinaryWriter writer)
-        {
-        }
-        public override void readFrom(BinaryReader reader)
-        {
-        }
-    }
+namespace AGSyncCS {
 
     /// <summary>
     /// this is a push message
     /// </summary>
-    public class SM_StartPlay : SM
+    public class SM_StartLoading : SM
     {
         public override void readFrom(BinaryReader reader)
         {
+  
         }
 
         public override void writeTo(BinaryWriter writer)
@@ -31,7 +24,7 @@ namespace Servers._04Protocals {
 
         public override string ToString()
         {
-            return string.Format("SM_StartPlay");
+            return "SM_StartLoading Push Message";
         }
     }
 }

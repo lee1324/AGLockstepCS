@@ -12,49 +12,48 @@ namespace AGSyncCS {
               /// <summary>
         /// use this in local network(created by owner
         /// </summary>
-        public Room localRoom = null;
-        public void newLocalRoom(string ownerName){
-            localRoom = new Room();
-            localRoom.roomState = eRoomState.Idle;
-            localRoom.startTime = DateTime.Now;
+        public Room room = null;
+        void newRoom(string ownerName){
+            room = new Room();
+            room.roomState = eRoomState.Idle;
+            room.startTime = DateTime.Now;
             
-            localRoom.ID = Tools.IP2RoomID(Tools.GetLocalIP());
+            room.ID = Tools.IP2RoomID(Tools.GetLocalIP());
             //step 02: tell other clients of owner's roomID
-            Logger.Info("roomID:" + localRoom.ID);
+            Logger.Info("roomID:" + room.ID);
         }
 
         /// <summary>
         /// Step 05
         /// tell other clients(self included) to load
         /// </summary>
-        public void startLoad() {
-
+        public void notifyStartLoading() {
+            room.resetLoadingProgresses();
+            foreach(var connection in activeConnections) {
+                var sm = new SM_StartLoading();
+                connection.push(sm);
+            }
         }
     }
 
     partial class TcpClientConnection {
 
         void dispatch(int protocal, CM cm, ref int errorCode, ref SM sm_response) {
-            if(protocal == Protocals.Test)
+            if (protocal == Protocals.Test)
                 on((CM_Test)cm, ref errorCode, ref sm_response);
             else if (protocal == Protocals.NewRoom)
                 on((CM_NewRoom)cm, ref errorCode, ref sm_response);
-            else if (protocal == Protocals.EnterRoom) 
-                on((CM_EnterRoom) cm , ref errorCode, ref sm_response);
-            else if (protocal == Protocals.QuitRoom) 
+            else if (protocal == Protocals.EnterRoom)
+                on((CM_EnterRoom)cm, ref errorCode, ref sm_response);
+            else if (protocal == Protocals.QuitRoom)
                 on((CM_QuitRoom)cm, ref errorCode, ref sm_response);
-            
-            else if (protocal == Protocals.Heartbeat) {
+
+            else if (protocal == Protocals.Heartbeat)
                 on((CM_HeartBeat)cm, ref errorCode, ref sm_response);
-            }
-            //} else if (protocal == Protocals.ServerError) {
-            //    on((CM_ServerError)cm, ref errorCode, ref sm_response);
-            //} else if (protocal == Protocals.CloseConnection) {
-            //    on((CM_CloseConnection)cm, ref errorCode, ref sm_response);
-            //} else {
-            //    Logger.Error("Unknown protocal: " + protocal);
-            //    errorCode = ErrorCode.UnknownProtocal;
-            //}
+            else if (protocal == Protocals.LoadingProgress)
+                on((CM_LoadingProgress)cm, ref errorCode, ref sm_response);
+
+            else Logger.Warning("No dispatch:" + protocal);
         }
 
         void on(CM_HeartBeat cm, ref int errorCode, ref SM sm_response) {
@@ -68,7 +67,7 @@ namespace AGSyncCS {
 
         void on(CM_EnterRoom cm, ref int errorCode, ref SM sm_response) {
             var roomID = cm.roomID;
-            var localRoom = TCP_Server.Instance.localRoom;
+            var localRoom = TCP_Server.Instance.room;
             if (cm.pos <= 0 || cm.pos > Config.MaxPlayersPerRoom) {
                 errorCode = ErrorCode.InvalidPosition;//invalid position
                 Logger.Error("Invalid position: " + cm.pos);
@@ -97,7 +96,7 @@ namespace AGSyncCS {
 
         void on(CM_QuitRoom cm, ref int errorCode, ref SM sm_response) {
             var roomID = cm.roomID;
-            var localRoom = TCP_Server.Instance.localRoom;
+            var localRoom = TCP_Server.Instance.room;
             if (roomID == localRoom.ID) {
                 //step 04: join or remove user from local room
                 if (localRoom.usersConnections[cm.pos] != null &&
@@ -113,6 +112,13 @@ namespace AGSyncCS {
             } else {
                 errorCode = ErrorCode.RoomNotFound;//room not found
             }
+        }
+
+        void on(CM_LoadingProgress cm, ref int errorCode, ref SM sm_response) {
+            var sm = new SM_LoadingProgress();
+            sm.usersLoadingProgress0_100 = new int[Config.MaxPlayersPerRoom];
+            sm.usersLoadingProgress0_100[cm.pos] = cm.progress0_100;
+            sm_response = sm;
         }
 
         void on(CM_Test cm, ref int errorCode, ref SM sm_response) {
