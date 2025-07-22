@@ -23,7 +23,7 @@ namespace AGSyncCS
             Logger.Start();
             
             if(startTcpServer){
-                new TCP_Server().start();
+                new BandServer().start();
             }
 
             // Start UDP server in a background thread (toggle)

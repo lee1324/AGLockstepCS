@@ -39,14 +39,14 @@ namespace AGSyncCS
             Logger.Info("--- Testing Test_InLocalWifi ---");
             Logger.Info("--- Master Slaves Mode ---");
 
-            var clients = new Client[Config.MaxPlayersPerRoom];
+            var clients = new BandClient[Config.MaxPlayersPerRoom];
             //owner is clients[0], ignore localClients[0]
 
             const string roomID = "007024";//for test in A285
 
             Logger.Info("--- client starts one by one ---");
             for (int i = 0; i < clients.Length; ++i) {
-                clients[i] = new Client().start(roomID, i);
+                clients[i] = new BandClient(roomID, i).start();
                 
                 Logger.Info(string.Format("C Test_InLocalWifi Client {0} started", i));
                 Thread.Sleep(100);
@@ -61,11 +61,10 @@ namespace AGSyncCS
 
             Logger.Debug("\n");
             Logger.Debug("--- Test EnterRoom ---");
-             for (int i = 0; i < clients.Length; ++i)
-             {
+             for (int i = 0; i < clients.Length; ++i) {
                  int clientId = i;
                  try {
-                     Client client = clients[clientId];
+                     var client = clients[clientId];
                     //Step 03: client join the room
                      var cm = new CM_EnterRoom();
 
@@ -76,13 +75,13 @@ namespace AGSyncCS
                      cm.onResponse = (s) => {
                          Logger.Debug("C NewRoom Response:" + s.ToString());//enter success
                      };
-                     client.Send(cm);
+                     client.send(cm);
                  }
                  catch (Exception ex) {
                      Logger.Error(string.Format("ClientId {0} Error: {1}", clientId, ex.Message));
                  }
                  Thread.Sleep(1000);
-                 TCP_Server.Instance.room.printState();
+                 BandServer.Instance.room.printState();
              }
 
 
@@ -92,7 +91,7 @@ namespace AGSyncCS
              {
                  int clientId = i;
                  try {
-                     Client client = clients[clientId];
+                     var client = clients[clientId];
                      var cm = new CM_QuitRoom();
 
                      cm.pos = client.pos; // Set position for the client
@@ -100,13 +99,13 @@ namespace AGSyncCS
                      cm.onResponse = (s) => {
                          Logger.Debug("C QuitRoom Response:" + s.ToString());//enter success
                      };
-                     client.Send(cm);
+                     client.send(cm);
                  }
                  catch (Exception ex) {
                      Logger.Error(string.Format("ClientId {0} Error: {1}", clientId, ex.Message));
                  }
                  Thread.Sleep(1000);
-                 TCP_Server.Instance.room.printState();
+                 BandServer.Instance.room.printState();
              }
 
              Logger.Debug("\n");
@@ -115,7 +114,7 @@ namespace AGSyncCS
              {
                  int clientId = i;
                  try {
-                     Client client = clients[clientId];
+                     var client = clients[clientId];
                     //Step 03: client join the room
                      var cm = new CM_EnterRoom();
 
@@ -126,17 +125,17 @@ namespace AGSyncCS
                     cm.onResponse = (s) => {
                          Logger.Debug("C NewRoom Response:" + s.ToString());//enter success
                      };
-                     client.Send(cm);
+                     client.send(cm);
                  }
                  catch (Exception ex) {
                      Logger.Error(string.Format("ClientId {0} Error: {1}", clientId, ex.Message));
                  }
                  Thread.Sleep(1000);
-                 TCP_Server.Instance.room.printState();
+                 BandServer.Instance.room.printState();
             }
 
             Thread.Sleep(1000);
-            TCP_Server.Instance.notifyStartLoading();
+            BandServer.Instance.notifyStartLoading();
             Thread.Sleep(1000);
             for(int i = 0; i < clients.Length; ++i){
                 var client = clients[i];
@@ -157,7 +156,7 @@ namespace AGSyncCS
                             }
                         };
 
-                        client.Send(cm);
+                        client.send(cm);
                         Thread.Sleep(30);
                     }
                 });

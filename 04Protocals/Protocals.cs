@@ -20,9 +20,11 @@ namespace AGSyncCS {
         public const int StartLoading = 54;//server push message to clients to start loading
         public const int LoadingProgress = 55;
 
+        public const int Sync = 60;//udp
+
 
         /// <summary>
-        /// 发送cm前要先发它的protocal
+        /// 发送cm前要先发它的protocal, 在这里生成
         /// </summary>
         /// <param name="cm"></param>
         /// <returns></returns>
@@ -37,16 +39,11 @@ namespace AGSyncCS {
             else if(cmType == typeof(CM_EnterRoom)) p = EnterRoom;
             else if(cmType == typeof(CM_QuitRoom)) p = QuitRoom;
             else if(cmType == typeof(CM_LoadingProgress)) p = LoadingProgress;
+            else if(cmType == typeof(CM_Sync)) p = Sync;
             return p;
         }
 
-        //for push only
-        public static int GetProtocal(SM sm) {
-            int p = None;
-            var smType = sm.GetType();
-            if(smType == typeof(SM_StartLoading)) p = StartLoading;
-            return p;
-        }
+  
 
         public static CM GetCM(int protocal)
         {
@@ -56,6 +53,7 @@ namespace AGSyncCS {
             else if (protocal == EnterRoom) return new CM_EnterRoom();
             else if (protocal == QuitRoom) return new CM_QuitRoom();
             else if (protocal == LoadingProgress) return new CM_LoadingProgress();
+            else if (protocal == Sync) return new CM_Sync();
             return null;
         }
 
@@ -67,7 +65,18 @@ namespace AGSyncCS {
             else if (protocal == QuitRoom) return new SM_QuitRoom();
             else if (protocal == StartLoading) return new SM_StartLoading();
             else if (protocal == LoadingProgress) return new SM_LoadingProgress();
+            else if (protocal == Sync) return new SM_Sync();
             return null;
+        }
+
+
+        //for push only
+        public static int GetProtocal(SM sm) {
+            int p = None;
+            var smType = sm.GetType();
+            if (smType == typeof(SM_StartLoading)) p = StartLoading;
+            //PUSH ONLY!!!
+            return p;
         }
     }   
 

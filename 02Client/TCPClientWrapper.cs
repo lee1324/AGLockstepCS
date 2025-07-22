@@ -12,7 +12,7 @@ using System.Net.Configuration;
 namespace AGSyncCS{
     public partial class CM {//extend cm for client's usage
         public Action<SM> onResponse = null;
-        static Client _Instance = null;
+        static TCPClientWrapper _Instance = null;
         //public static void InitConnection() {
         //    if (_Instance == null) {
         //        _Instance = new Client();
@@ -27,11 +27,9 @@ namespace AGSyncCS{
         //}
     }
   
-    public class Client
+    class TCPClientWrapper
     {
-        public int pos;//position in the room, used to enter the room
-        public string roomID = "";//room to enter
-        public string nickname = "";//nickname, used in local network
+
 
         private System.Net.Sockets.TcpClient client;
         private NetworkStream stream;
@@ -42,19 +40,13 @@ namespace AGSyncCS{
         private Thread receiveThread;
         private readonly object streamLock = new object();
 
-        public Client() {
+        public TCPClientWrapper() {
             this.timeout = 30000;
         }
 
-        public Client start(string roomID, int pos) {
+        public TCPClientWrapper start(string IP, int port) {
             Thread clientThread = new Thread(() => {
-                this.pos = pos;
-                this.roomID = roomID;
-
-                this.nickname = "TestUser" + pos; // Set a nickname for the client
-                var ownerIP = Tools.RoomID2IP(roomID);
-                //Step 03: client connects to server by RoomID(IP)
-                _connect(ownerIP, Config.TCP_SERVER_PORT);
+                _connect(IP, port);
             });
             clientThread.IsBackground = true;
             clientThread.Start();

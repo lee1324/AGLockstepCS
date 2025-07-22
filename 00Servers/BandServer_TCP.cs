@@ -11,9 +11,9 @@ using System.Diagnostics;
 
 namespace AGSyncCS
 {
-    public partial class TCP_Server {
+    public partial class BandServer {
 
-        public static TCP_Server Instance;
+        public static BandServer Instance;
         
         private TcpListener listener;
         private bool isRunning;
@@ -26,7 +26,7 @@ namespace AGSyncCS
         private int maxConnections;
         private int connectionTimeout;
 
-        public TCP_Server()
+        public BandServer()
         {
             if (Instance == null) Instance = this;
             else Logger.Error("TCP_Server instance already exists, using singleton pattern");
