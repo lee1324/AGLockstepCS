@@ -1,6 +1,8 @@
-using System;
-using System.Threading;
 using SimpleJson;
+using System;
+using System.Net;
+using System.Net.Sockets;
+using System.Threading;
 
 namespace AGSyncCS
 {
@@ -11,7 +13,6 @@ namespace AGSyncCS
             Logger.Info("=== TCP Server & Client Test ===");
 
             // Give server a moment to ensure it's ready
-            Thread.Sleep(1000);
             Test_InLocalWifi();
 
             //TestSingleClient();
@@ -37,7 +38,29 @@ namespace AGSyncCS
          private static void Test_InLocalWifi()
          {
             Logger.Info("--- Testing Test_InLocalWifi ---");
-            Logger.Info("--- Master Slaves Mode ---");
+
+            if (true) {
+                Logger.Info("--- test port taken ---");
+                int takenSize = 5;//ok, max_port_retry +1 = fail
+                try{
+                    for(int i = 0; i < takenSize; ++i){
+                        var ls = new TcpListener(IPAddress.Any, Config.TCP_SERVER_PORT + i);
+                        ls.Start();
+                    }
+                }
+                catch (Exception e) {
+
+                }
+            }
+
+            Thread.Sleep(1000);
+            new BandServer().start(() => {
+                Logger.Warning("Tcp server starts successfullly");
+            }, (error) => {
+                Logger.Warning("Tcp server starts failed, error:" + error);
+            });
+            Thread.Sleep(1000);//give server a moment 2 start
+
 
             var clients = new BandClient[Config.MaxPlayersPerRoom];
             //owner is clients[0], ignore localClients[0]
@@ -46,18 +69,23 @@ namespace AGSyncCS
 
             Logger.Info("--- client starts one by one ---");
             for (int i = 0; i < clients.Length; ++i) {
-                clients[i] = new BandClient(roomID, i).start();
-                
-                Logger.Info(string.Format("C Test_InLocalWifi Client {0} started", i));
+                var c = new BandClient(roomID, i).start(() => {
+                    Logger.Info(string.Format("C Test_InLocalWifi Client {0} started", i));
+                });
+                clients[i] = c;
                 Thread.Sleep(100);
              }
+
+            Thread.Sleep(3000);//give all clients some time to check connection
+
+
 
             for (int i = 0; i < clients.Length; ++i) {
                 clients[i].onPush(Protocals.StartLoading, (sm) => {
                     Logger.Info("todo:房主点开始了，成员开始加载曲谱:" + sm);
                 });
             }
-            Thread.Sleep(1000);
+            Thread.Sleep(4000);//give clients some time to retry different ports
 
             Logger.Debug("\n");
             Logger.Debug("--- Test EnterRoom ---");

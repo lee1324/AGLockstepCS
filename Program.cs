@@ -17,24 +17,18 @@ namespace AGSyncCS
 
 
             // Toggle to enable/disable UDP server
-            bool enableUdpServer = false; // Set to false to disable UDP server
-            bool startTcpServer = true; // Set to false to skip starting TCP server
             // Start the logging service
             Logger.Start();
             
-            if(startTcpServer){
-                new BandServer().start();
-            }
-            
-            // Give servers a moment to start
-            Thread.Sleep(3000);
             
             TcpServerClientTest.RunTest();
 
+            while (true) {
+                Thread.Sleep(33);
+            }
+
             Logger.Info("All tests completed. Press any key to stop servers...");
             Console.ReadKey();
-            
-            Logger.Stop();
         }
     }
 } 

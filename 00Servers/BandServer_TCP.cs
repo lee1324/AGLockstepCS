@@ -17,14 +17,14 @@ namespace AGSyncCS
         
         private TcpListener listener;
         private bool isRunning;
-        private int port;
+        private int tcpPort;
 
         private Thread serverThread;
         private List<TcpClientConnection> activeConnections;
         private readonly object connectionsLock = new object();
         
         private int maxConnections;
-        private int connectionTimeout;
+        private int tcpConnectionTimeOut;
 
         private UdpServer _udpServer;
 
@@ -32,40 +32,69 @@ namespace AGSyncCS
         {
             if (Instance == null) Instance = this;
             else Logger.Error("TCP_Server instance already exists, using singleton pattern");
-            this.port = Config.TCP_SERVER_PORT;
+            this.tcpPort = Config.TCP_SERVER_PORT;
             this.maxConnections = Config.TCP_MAX_CONNECTIONS;
-            this.connectionTimeout = Config.TCP_CONNECTION_TIMEOUT;
+            this.tcpConnectionTimeOut = Config.TCP_CONNECTION_TIMEOUT;
             this.isRunning = false;
             this.activeConnections = new List<TcpClientConnection>();
-            newRoom("my room"); // Create a local room
+            
+            room = new Room();
+            room.roomState = eRoomState.Idle;
+            room.startTime = DateTime.Now;
+            room.ID = Tools.IP2RoomID(Tools.GetLocalIP());
         }
 
  
 
-        public void start()
+        public void start(Action onSuccess, Action<string> onFail)
         {
             if (isRunning)
                 return;
 
-            try
-            {
-                listener = new TcpListener(IPAddress.Any, port);
-                listener.Start();
-                isRunning = true;
+            int retryTimes = 0;
+            while(!isRunning){
+                try {
+                    if(retryTimes > 0) {
+                        Logger.Warning("retry times:" + retryTimes);
+                    }
+                    tryTCPListenerOnPort();
+                    if (onSuccess != null) onSuccess();
+                }
+                catch (Exception ex) {//Port taken
+                   
+                    Logger.Warning("Failed to start TCP server: " + ex.Message);
 
-                serverThread = new Thread(ListenForClients);
-                serverThread.IsBackground = true;
-                serverThread.Start();
+                    if(retryTimes >= Config.MAX_PORT_RETRY) {
+                        if(onFail != null) onFail(ex.Message);
+                        break;
+                    }
+                    else {
+                        ++retryTimes;
+                        tcpPort = Config.TCP_SERVER_PORT + retryTimes;//retry on different port
+                    }
+                }
+            }
 
-                //prepare a udp server inside
+
+            try {
                 _udpServer = new UdpServer(Config.UDP_SERVER_PORT, Config.UDP_ECHO_ENABLED);
                 _udpServer.start();
             }
-            catch (Exception ex)
-            {
+            catch (Exception ex) {
+                //Port taken
                 Logger.Error("Failed to start TCP server: " + ex.Message);
                 throw;
             }
+        }
+
+        void tryTCPListenerOnPort() {
+            listener = new TcpListener(IPAddress.Any, tcpPort);
+            listener.Start();
+            isRunning = true;
+
+            serverThread = new Thread(ListenForClients);
+            serverThread.IsBackground = true;
+            serverThread.Start();
         }
 
         public void Stop()
@@ -126,7 +155,7 @@ namespace AGSyncCS
                     }
 
                     // Create new connection handler
-                    TcpClientConnection connection = new TcpClientConnection(this, client, connectionTimeout);
+                    TcpClientConnection connection = new TcpClientConnection(this, client, tcpConnectionTimeOut);
                     
                     lock (connectionsLock)
                     {

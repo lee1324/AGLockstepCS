@@ -18,9 +18,23 @@ namespace AGSyncCS {
             this.nickname = "BandClient" + pos; //default nickname
         }
 
-        public BandClient start() {
+        //lstodo onfail
+        public BandClient start(Action onSuccess, Action onFail = null) {
              var serverIP = Tools.RoomID2IP(roomID);
-            _tcpClient = new TCPClientWrapper().start(serverIP, Config.TCP_SERVER_PORT);
+
+            for(int i = 0; i < Config.MAX_PORT_RETRY; ++i) {
+                var c = new TCPClientWrapper();
+                int tryPort = Config.TCP_SERVER_PORT + i;
+
+                c.connect(serverIP, tryPort, () => {
+                    Logger.Debug("Tcp client connects success !!! Port:" + c.ServerPort);
+                    _tcpClient = c;
+                    onSuccess();
+                }, (failMessage) => {
+                    Logger.Warning("Tcp Client connects failed! Port:" + c.ServerPort);
+                });
+            }
+
             _udpClient = new UdpClientWrapper(serverIP, Config.UDP_SERVER_PORT);
             return this;
         }

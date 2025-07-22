@@ -44,12 +44,16 @@ namespace AGSyncCS{
             this.timeout = 30000;
         }
 
-        public TCPClientWrapper start(string IP, int port) {
-            Thread clientThread = new Thread(() => {
-                _connect(IP, port);
+        Action _onSuccess;
+        Action<string> _onFail;
+        public TCPClientWrapper connect(string IP, int port, Action onSuccess, Action<string> onFail) {
+            _onSuccess = onSuccess;
+            _onFail    = onFail;
+            serverPort = port;
+            var t = new Thread(() => {
+                _connect(IP, serverPort);
             });
-            clientThread.IsBackground = true;
-            clientThread.Start();
+            t.Start();
             return this;
         }
 
@@ -59,25 +63,43 @@ namespace AGSyncCS{
                 this.serverPort = serverPort;
 
                 client = new System.Net.Sockets.TcpClient();
-                client.Connect(serverAddress, serverPort);
+                client.Connect(serverAddress, serverPort);//NOTICE:THIS IS A BLOCK CALL !!!
                 //Logger.Debug(string.Format("Connectting to TCP server {0}:{1}", serverAddress, serverPort));
                 stream = client.GetStream();
                 isConnected = true;
 
                 // Start receive thread
                 receiveThread = new Thread(ReceiveLoop);
-                receiveThread.IsBackground = true;
                 receiveThread.Start();
 
-                var heatBeatThread = new Thread(_heatBeatLoop);
-                heatBeatThread.IsBackground = true;
-                heatBeatThread.Start();
+                var cm = new CM_HandShake();
+                cm.shakeI = serverPort + 2;
+                cm.onResponse = (sm_response) => {
+                    var sm = (SM_HandShake)sm_response;
+                    Logger.Debug("C Handshake response: " + sm.ToString());
+                    if (sm.shakeI == cm.shakeI * 2) {
+                        var heatBeatThread = new Thread(_heatBeatLoop);
+                        heatBeatThread.Start();
+                        if (_onSuccess != null) 
+                            _onSuccess();
+                    }
+                    else 
+                        onShakeFail();
+                };
+                Send(cm);
+
+
             }
             catch (Exception ex) {
-                Logger.Error(string.Format("Failed to connect to TCP server {0}:{1}: {2}",
+                Logger.Warning(string.Format("Failed to connect to TCP server {0}:{1}: {2}",
                     serverAddress, serverPort, ex.Message));
-                throw;
+                //If it's taken by another app, u wouldn't know
+                //need a protocal of handshake
             }
+        }
+
+        void onShakeFail() {
+            Close();
         }
 
         byte[] sendBuffer = new byte[Config.BUFFER_SIZE];
@@ -208,8 +230,10 @@ namespace AGSyncCS{
                     else Logger.Info("Wrong MessageType From Server:" + iMessageType);
                 }
                 catch (Exception ex) {
-                    if (isConnected)
-                        Logger.Error("Error receiving from server: " + ex.Message);
+                    if (isConnected){
+                        Logger.Debug("Perhaps be a retry port, debug receiving from server: " + ex.Message);
+                        
+                    }
                     break;
                 }
             }

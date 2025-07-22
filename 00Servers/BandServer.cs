@@ -5,19 +5,12 @@ using System.Linq;
 using System.Text;
 
 namespace AGSyncCS {
-        public partial class BandServer{ 
+    public partial class BandServer{ 
         /// <summary>
         /// use this in local network(created by owner
         /// </summary>
         public Room room = null;
-        void newRoom(string ownerName){
-            room = new Room();
-            room.roomState = eRoomState.Idle;
-            room.startTime = DateTime.Now;
-            
-            room.ID = Tools.IP2RoomID(Tools.GetLocalIP());
-        }
-
+  
         /// <summary>
         /// Step 05
         /// tell other clients(self included) to load
@@ -47,6 +40,8 @@ namespace AGSyncCS {
                 on((CM_HeartBeat)cm, ref errorCode, ref sm_response);
             else if (protocal == Protocals.LoadingProgress)
                 on((CM_LoadingProgress)cm, ref errorCode, ref sm_response);
+            else if (protocal == Protocals.HandShake)
+                on((CM_HandShake)cm, ref errorCode, ref sm_response);
 
             else Logger.Warning("No dispatch:" + protocal);
         }
@@ -56,6 +51,14 @@ namespace AGSyncCS {
             sm.lastBeatTime = cm.lastBeatTime;
             sm_response = sm;
         }
+
+
+         void on(CM_HandShake cm, ref int errorCode, ref SM sm_response) {
+            var sm = new SM_HandShake();
+            sm.shakeI = cm.shakeI * 2;
+            sm_response = sm;
+        }
+        
 
         //None in local network/Wifi
         void on(CM_NewRoom cm, ref int errorCode, ref SM sm_response) { }
@@ -82,8 +85,7 @@ namespace AGSyncCS {
                     sm.roomID = roomID;
                     sm_response = sm;//set response to client
                 }
-
-                Logger.Info(string.Format("User entered local room:{0} pos:{1}", roomID, cm.pos));
+                Logger.Debug(string.Format("User entered local room:{0} pos:{1}", roomID, cm.pos));
             } else {
                 errorCode = ErrorCode.RoomNotFound;//room not found
             }
@@ -129,8 +131,6 @@ namespace AGSyncCS {
             s.str1 = "sm.str1 from server:" + cm.str1;
             sm_response = s;//set reponse to client
         }
-
-     
     }
 
     partial class UdpServer {
@@ -141,7 +141,6 @@ namespace AGSyncCS {
             }
             var sm = new SM_Sync();
             sm.syncData = syncData;
-
             sm_response = sm;
         }
     }
