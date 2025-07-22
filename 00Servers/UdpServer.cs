@@ -32,7 +32,6 @@ namespace AGSyncCS
             listenThread = new Thread(ListenLoop);
             listenThread.IsBackground = true;
             listenThread.Start();
-            Logger.Info("UDP server started on port " + port);
         }
 
         public void Stop()

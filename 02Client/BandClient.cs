@@ -6,6 +6,7 @@ using System.Text;
 namespace AGSyncCS {
 
      public class BandClient {//wrapper of tcp and udp client
+        public DateTime dt;//debug only
 
         public int pos;//position in the room, used to enter the room
         public string roomID = "";//room to enter

@@ -16,8 +16,6 @@ namespace AGSyncCS {
             room.startTime = DateTime.Now;
             
             room.ID = Tools.IP2RoomID(Tools.GetLocalIP());
-            //step 02: tell other clients of owner's roomID
-            Logger.Info("roomID:" + room.ID);
         }
 
         /// <summary>

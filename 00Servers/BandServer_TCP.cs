@@ -57,7 +57,6 @@ namespace AGSyncCS
                 serverThread.IsBackground = true;
                 serverThread.Start();
 
-                Logger.Info(string.Format("TCP server:{0}", port));
                 //prepare a udp server inside
                 _udpServer = new UdpServer(Config.UDP_SERVER_PORT, Config.UDP_ECHO_ENABLED);
                 _udpServer.start();

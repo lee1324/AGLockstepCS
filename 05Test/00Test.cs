@@ -170,14 +170,16 @@ namespace AGSyncCS
                     var cm = new CM_Sync();
                     cm.pos = i;
                     cm.syncData = i + " - " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                    c.dt = DateTime.Now;
 
                     cm.onResponse = (resp) => {
-                        var info = string.Format("C{0} Sync Response:{1}", c.pos, resp.ToString());
-                        Logger.Info(info);
+                        //var info = string.Format("C{0} Sync Response:{1}", c.pos, resp.ToString());
+                        //Logger.Info(info);
+                        Logger.Info("delay:" + DateTime.Now.Subtract(c.dt).TotalMilliseconds + "ms");
                     };
                     c.send(cm);
                 }
-                Thread.Sleep(5000);
+                Thread.Sleep(33);
             }
 
              //Logger.Debug("--- Test Heartbeat ---");
