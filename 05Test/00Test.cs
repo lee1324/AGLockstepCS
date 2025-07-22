@@ -142,7 +142,7 @@ namespace AGSyncCS
                 Thread t = new Thread(() => {
                     int progress0_100 = 0;
                     while(progress0_100 <= 100) {
-                        ++progress0_100;
+                        progress0_100 += 10;
 
                         var cm = new CM_LoadingProgress();
                         cm.pos = client.pos;
@@ -164,18 +164,20 @@ namespace AGSyncCS
                 t.Start();
             }
 
-            if (true) {
-                var c = clients[0];
-                if (true) {
-                    CM_Sync cm = new CM_Sync();
-                    cm.pos = 0;
-                    cm.syncData = "test as dateTime:" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+            while (true) {
+                for(int i = 0; i < clients.Length; ++i) {
+                    var c = clients[i];
+                    var cm = new CM_Sync();
+                    cm.pos = i;
+                    cm.syncData = i + " - " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+
                     cm.onResponse = (resp) => {
-                        Logger.Info("C Sync Response:" + resp.ToString());
+                        var info = string.Format("C{0} Sync Response:{1}", c.pos, resp.ToString());
+                        Logger.Info(info);
                     };
                     c.send(cm);
                 }
-                Thread.Sleep(20000);
+                Thread.Sleep(5000);
             }
 
              //Logger.Debug("--- Test Heartbeat ---");
