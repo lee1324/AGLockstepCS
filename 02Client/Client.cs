@@ -13,21 +13,21 @@ namespace AGSyncCS{
     public partial class CM {//extend cm for client's usage
         public Action<SM> onResponse = null;
         static Client _Instance = null;
-        public static void InitConnection() {
-            if (_Instance == null) {
-                _Instance = new Client();
-                Logger.Debug("C TcpClientWrapper InitConnection IP:" + Config.TCP_HOST
-                     + ":" + Config.TCP_SERVER_PORT);
-                _Instance.Connect(Config.TCP_HOST, Config.TCP_SERVER_PORT);
-            }
-        }
+        //public static void InitConnection() {
+        //    if (_Instance == null) {
+        //        _Instance = new Client();
+        //        Logger.Debug("C TcpClientWrapper InitConnection IP:" + Config.TCP_HOST
+        //             + ":" + Config.TCP_SERVER_PORT);
+        //        _Instance._connect(Config.TCP_HOST, Config.TCP_SERVER_PORT);
+        //    }
+        //}
 
-        public void send() {
-            _Instance.Send(this);
-        }
+        //public void send() {
+        //    _Instance.Send(this);
+        //}
     }
   
-    internal class Client
+    public class Client
     {
         public int pos;//position in the room, used to enter the room
         public string roomID = "";//room to enter
@@ -42,11 +42,26 @@ namespace AGSyncCS{
         private Thread receiveThread;
         private readonly object streamLock = new object();
 
-        public Client(int timeout = 30000) {
-            this.timeout = timeout;
+        public Client() {
+            this.timeout = 30000;
         }
 
-        public void Connect(string serverAddress, int serverPort) {
+        public Client start(string roomID, int pos) {
+            Thread clientThread = new Thread(() => {
+                this.pos = pos;
+                this.roomID = roomID;
+
+                this.nickname = "TestUser" + pos; // Set a nickname for the client
+                var ownerIP = Tools.RoomID2IP(roomID);
+                //Step 03: client connects to server by RoomID(IP)
+                _connect(ownerIP, Config.TCP_SERVER_PORT);
+            });
+            clientThread.IsBackground = true;
+            clientThread.Start();
+            return this;
+        }
+
+        void _connect(string serverAddress, int serverPort) {
             try {
                 this.serverAddress = serverAddress;
                 this.serverPort = serverPort;
