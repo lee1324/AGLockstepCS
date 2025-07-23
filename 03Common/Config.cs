@@ -20,21 +20,25 @@ namespace AGSyncCS
 
 
         /// <summary>
-        /// 少数情况下，port被占用了，就加1再尝试，最多增加这么多：
+        /// 少数情况下，port被占用了，就加1再尝试，最多重试这么多次
+        /// 所以各服务器端口相差 比这个值要大
         /// </summary>
         public const int MAX_PORT_RETRY = 10;
-        // HTTP Server Configuration
-        public const int HTTP_SERVER_PORT = 9005;
-        public const string HTTP_SERVER_URL = "http://localhost:9005";
-        
-        // UDP Server Configuration
-        public const int UDP_SERVER_PORT = 9055;
-        public const bool UDP_ECHO_ENABLED = true;
-        
+
         // TCP Server Configuration
         public const int TCP_SERVER_PORT = 9001;
         public const int TCP_MAX_CONNECTIONS = 5000;
         public const int TCP_CONNECTION_TIMEOUT = 30000;
+
+        // UDP Server Configuration
+        public const int UDP_SERVER_PORT = 9055;
+        public const bool UDP_ECHO_ENABLED = true;
+        
+
+
+        // HTTP Server Configuration
+        public const int HTTP_SERVER_PORT = 9095;
+        public const string HTTP_SERVER_URL = "http://localhost:9005";
         
         // Logging Configuration
         public const string LOG_FILE_PATH = "C:\\Users\\ls\\Documents\\AGSyncCS\\server.log";

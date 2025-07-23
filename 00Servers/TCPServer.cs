@@ -11,13 +11,11 @@ using System.Diagnostics;
 
 namespace AGSyncCS
 {
-    public partial class BandServer {
+    public partial class TCP_Server : ServerBase {
 
-        public static BandServer Instance;
+        public static TCP_Server Instance;
         
         private TcpListener listener;
-        private bool isRunning;
-        private int tcpPort;
 
         private Thread serverThread;
         private List<TcpClientConnection> activeConnections;
@@ -26,16 +24,17 @@ namespace AGSyncCS
         private int maxConnections;
         private int tcpConnectionTimeOut;
 
-        private UdpServer _udpServer;
 
-        public BandServer()
+        public TCP_Server()
         {
+            this.PortBase = Config.TCP_SERVER_PORT;
+
             if (Instance == null) Instance = this;
             else Logger.Error("TCP_Server instance already exists, using singleton pattern");
-            this.tcpPort = Config.TCP_SERVER_PORT;
+
             this.maxConnections = Config.TCP_MAX_CONNECTIONS;
             this.tcpConnectionTimeOut = Config.TCP_CONNECTION_TIMEOUT;
-            this.isRunning = false;
+            this._isRunning = false;
             this.activeConnections = new List<TcpClientConnection>();
             
             room = new Room();
@@ -44,64 +43,26 @@ namespace AGSyncCS
             room.ID = Tools.IP2RoomID(Tools.GetLocalIP());
         }
 
- 
+        protected override void tryPort(){
+            try{
+                listener = new TcpListener(IPAddress.Any, _port);
+                listener.Start();//block, may throw SocketException if port is taken
+                _isRunning = true;
 
-        public void start(Action onSuccess, Action<string> onFail)
-        {
-            if (isRunning)
-                return;
-
-            int retryTimes = 0;
-            while(!isRunning){
-                try {
-                    if(retryTimes > 0) {
-                        Logger.Warning("retry times:" + retryTimes);
-                    }
-                    tryTCPListenerOnPort();
-                    if (onSuccess != null) onSuccess();
-                }
-                catch (Exception ex) {//Port taken
-                   
-                    Logger.Warning("Failed to start TCP server: " + ex.Message);
-
-                    if(retryTimes >= Config.MAX_PORT_RETRY) {
-                        if(onFail != null) onFail(ex.Message);
-                        break;
-                    }
-                    else {
-                        ++retryTimes;
-                        tcpPort = Config.TCP_SERVER_PORT + retryTimes;//retry on different port
-                    }
-                }
+                serverThread = new Thread(ListenForClients);
+                serverThread.IsBackground = true;
+                serverThread.Start();
             }
-
-
-            try {
-                _udpServer = new UdpServer(Config.UDP_SERVER_PORT, Config.UDP_ECHO_ENABLED);
-                _udpServer.start();
-            }
-            catch (Exception ex) {
-                //Port taken
-                Logger.Error("Failed to start TCP server: " + ex.Message);
+            catch(Exception e) {
                 throw;
             }
         }
 
-        void tryTCPListenerOnPort() {
-            listener = new TcpListener(IPAddress.Any, tcpPort);
-            listener.Start();
-            isRunning = true;
-
-            serverThread = new Thread(ListenForClients);
-            serverThread.IsBackground = true;
-            serverThread.Start();
-        }
-
         public void Stop()
         {
-            if (!isRunning)
+            if (!_isRunning)
                 return;
-            isRunning = false;
+            _isRunning = false;
 
             // Close all active connections
             lock (connectionsLock)
@@ -137,7 +98,7 @@ namespace AGSyncCS
 
         private void ListenForClients()
         {
-            while (isRunning)
+            while (_isRunning)
             {
                 try
                 {
@@ -172,7 +133,7 @@ namespace AGSyncCS
                 }
                 catch (Exception ex)
                 {
-                    if (isRunning)
+                    if (_isRunning)
                     {
                         Logger.Error("Error accepting TCP client: " + ex.Message);
                     }
@@ -187,7 +148,7 @@ namespace AGSyncCS
                 connection.Start();
                 
                 // Keep connection alive until it's closed
-                while (connection.IsConnected && isRunning)
+                while (connection.IsConnected && _isRunning)
                 {
                     Thread.Sleep(100);
                 }
@@ -223,7 +184,7 @@ namespace AGSyncCS
 
         public bool IsRunning
         {
-            get { return isRunning; }
+            get { return _isRunning; }
         }
 
      

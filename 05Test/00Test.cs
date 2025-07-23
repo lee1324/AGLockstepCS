@@ -13,33 +13,10 @@ namespace AGSyncCS
             Logger.Info("=== TCP Server & Client Test ===");
 
             // Give server a moment to ensure it's ready
-            Test_InLocalWifi();
-
-            //TestSingleClient();
-
-            //Thread.Sleep(1000);
-
-            //Test_CM_NewRoom();
-
-            //Thread.Sleep(1000);
-
-            // Test multiple clients
-            //TestMultipleClients();
-
-            //Thread.Sleep(1000);
-
-            // Test connection limits
-            //TestConnectionLimits();
-
-            //Thread.Sleep(1000);
-            Logger.Info("=== TCP Server & Client Test Complete ===");
-        }
-
-         private static void Test_InLocalWifi()
-         {
+      
             Logger.Info("--- Testing Test_InLocalWifi ---");
 
-            if (true) {
+            if (false) {
                 Logger.Info("--- test port taken ---");
                 int takenSize = 5;//ok, max_port_retry +1 = fail
                 try{
@@ -53,14 +30,17 @@ namespace AGSyncCS
                 }
             }
 
-            Thread.Sleep(1000);
-            new BandServer().start(() => {
-                Logger.Warning("Tcp server starts successfullly");
-            }, (error) => {
-                Logger.Warning("Tcp server starts failed, error:" + error);
+            BandServer server = new BandServer();
+            server.start(() => {
+                Logger.Info(string.Format("Server started successfully portTCP:{0} portUDP:{1} ",
+                    server.portTCP, server.portUDP));
+            }, (errorCode) => {
+                Logger.Error("Failed to start server, error code: " + errorCode);
             });
             Thread.Sleep(1000);//give server a moment 2 start
 
+            Logger.Info("=== Test Complete ===");
+            return;
 
             var clients = new BandClient[Config.MaxPlayersPerRoom];
             //owner is clients[0], ignore localClients[0]
@@ -109,7 +89,7 @@ namespace AGSyncCS
                      Logger.Error(string.Format("ClientId {0} Error: {1}", clientId, ex.Message));
                  }
                  Thread.Sleep(1000);
-                 BandServer.Instance.room.printState();
+                 TCP_Server.Instance.room.printState();
              }
 
 
@@ -133,7 +113,7 @@ namespace AGSyncCS
                      Logger.Error(string.Format("ClientId {0} Error: {1}", clientId, ex.Message));
                  }
                  Thread.Sleep(1000);
-                 BandServer.Instance.room.printState();
+                 TCP_Server.Instance.room.printState();
              }
 
              Logger.Debug("\n");
@@ -159,11 +139,11 @@ namespace AGSyncCS
                      Logger.Error(string.Format("ClientId {0} Error: {1}", clientId, ex.Message));
                  }
                  Thread.Sleep(1000);
-                 BandServer.Instance.room.printState();
+                 TCP_Server.Instance.room.printState();
             }
 
             Thread.Sleep(1000);
-            BandServer.Instance.notifyStartLoading();
+            TCP_Server.Instance.notifyStartLoading();
             Thread.Sleep(1000);
             for(int i = 0; i < clients.Length; ++i){
                 var client = clients[i];

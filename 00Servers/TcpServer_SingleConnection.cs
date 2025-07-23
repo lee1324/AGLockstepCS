@@ -17,9 +17,9 @@ namespace AGSyncCS {
         private int timeout;
         private Thread receiveThread;
         private readonly object streamLock = new object();
-        private BandServer server;
+        private TCP_Server server;
 
-        public TcpClientConnection(BandServer server, TcpClient client, int timeout)
+        public TcpClientConnection(TCP_Server server, TcpClient client, int timeout)
         {
             this.server = server;
             this.client = client;

@@ -1,11 +1,12 @@
-﻿using System;
+﻿using AGSyncCS;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
 
 namespace AGSyncCS {
-    public class CM_HandShake : CM {
+ public class CM_SearchLocalServers : CM {
         /// <summary>
         /// 目前房主发0是会被server缓存的，其他成员发自己的位置（但不会被server记住）
         /// </summary>
@@ -27,26 +28,18 @@ namespace AGSyncCS {
             
     }
 
-    public class SM_HandShake : SM {
+    public class SM_SearchLocalServers : SM {
         public int shakeI;
-        public int versionCode = 1; // 协议版本号，客户端和服务器端对比
 
-        public string udpIP = "";
-        public int udpPort = 0;
+        public int tcpPort = 0;
         public override void writeTo(BinaryWriter writer) {
             writer.Write(shakeI);
-            writer.Write(versionCode);
-
-            writer.Write(udpIP);
-            writer.Write(udpPort);
+            writer.Write(tcpPort);
         }
 
         public override void readFrom(BinaryReader reader) {
             shakeI = reader.ReadInt32();
-            versionCode = reader.ReadInt32();
-
-            udpIP = reader.ReadString();
-            udpPort = reader.ReadInt32();
+            tcpPort = reader.ReadInt32();
         }
 
         public override string ToString() {

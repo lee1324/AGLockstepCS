@@ -5,10 +5,12 @@ namespace AGSyncCS {
 
     public class Protocals
     {
+        public const int VersionCode =  1;//协议更新版本， 前端获取，和后端对比 由HandShake请求
+
+
+
         public const int None    = 00;//no error, no message,used for init
-        public const int Version =  1;//协议更新版本， 前端获取，和后端对比 由GetVer请求
         public const int HandShake = 2;//握手协议，客户端和服务器端建立连接时发送
-        public const int GetVer  = 10;//every time you change a protocal, update this
 
         public const int Heartbeat = 11;//心跳包，客户端每隔一段时间发送一次，服务器端收到后回复
         public const int ServerError = 12;//错误信息，服务器端发送给客户端

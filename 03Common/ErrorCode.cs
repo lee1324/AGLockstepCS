@@ -1,8 +1,19 @@
+using System.Runtime.CompilerServices;
+
 public class ErrorCode
 {
     public const int None = 0;
     public const int VerNotMatch = 1;
     public const int Unknown_Protocal = 02;//as 404, or Malicious
+
+    public const int PortTaken = 10;//端口被占用或其他原因导致TCP服务器启动失败
+    public const int UDPServerStart_Failed = 11;//同上
+
+    /// <summary>
+    /// 可能原因 不在同一局域网，或服务器未启动
+    /// </summary>
+    public const int ConnectServer_Failed = 12;
+
 
     /// <summary>
     /// 需要排队

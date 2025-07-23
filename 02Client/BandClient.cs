@@ -5,6 +5,10 @@ using System.Text;
 
 namespace AGSyncCS {
 
+    /// <summary>
+    /// 1 roomId connect directly
+    /// 2 search for rooms
+    /// </summary>
      public class BandClient {//wrapper of tcp and udp client
         public DateTime dt;//debug only
 

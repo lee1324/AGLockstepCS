@@ -7,36 +7,33 @@ using System.IO;
 
 namespace AGSyncCS
 {
-    public partial class UdpServer
+    public partial class UDP_Server : ServerBase
     {
-        private int port;
         private UdpClient udpClient;
         private Thread listenThread;
-        private bool isRunning;
-        private bool echoBack;
 
-        public UdpServer(int port, bool echoBack = false)
-        {
-            this.port = port;
-            this.echoBack = echoBack;
-            this.isRunning = false;
+
+        public UDP_Server() {
+            PortBase = Config.UDP_SERVER_PORT;
         }
 
-         public void start()
-         {
-            if (isRunning)
-                return;
+        protected override void tryPort() {
+            try{ 
+                udpClient = new UdpClient(_port);//may throw SocketException
 
-            udpClient = new UdpClient(port);
-            isRunning = true;
-            listenThread = new Thread(ListenLoop);
-            listenThread.IsBackground = true;
-            listenThread.Start();
+                _isRunning = true;
+                listenThread = new Thread(ListenLoop);
+                listenThread.Start();
+            }
+            catch(Exception e)
+            {
+                throw;
+            }
         }
 
         public void Stop()
         {
-            isRunning = false;
+            _isRunning = false;
             if (udpClient != null)
             {
                 udpClient.Close();
@@ -51,7 +48,7 @@ namespace AGSyncCS
         private void ListenLoop()
         {
             IPEndPoint remoteEP = new IPEndPoint(IPAddress.Parse(Config.ANY_ADDRESS), 0);
-            while (isRunning)
+            while (_isRunning)
             {
                 try
                 {
