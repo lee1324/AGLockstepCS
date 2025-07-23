@@ -39,7 +39,8 @@ namespace AGSyncCS {
 
             _tcpServer.start(() => {
                 Logger.Debug("Tcp server starts successfullly on port:" + _tcpServer.port);
-                if (isRunning) onSuccess();
+                if (isRunning) 
+                    onSuccess();
             }, (errorCode) => {
                 Logger.Warning("Tcp server starts failed, error:" + errorCode);
                 onFail(errorCode);
@@ -48,13 +49,17 @@ namespace AGSyncCS {
 
             _udpServer.start(() => {
                 Logger.Debug("Udp Server starts successfully on port:" + _udpServer.port);
-                if (isRunning) onSuccess();
+                if (isRunning) 
+                    onSuccess();
             }, (errorCode) => {
                 Logger.Warning("Udp server starts failed, error:" + errorCode);
                 onFail(errorCode);
             });
         }
 
+        /// <summary>
+        /// 此接口同步
+        /// </summary>
         public void stop() {
             if(_tcpServer != null) {
                 _tcpServer.Stop();
@@ -66,7 +71,7 @@ namespace AGSyncCS {
             }
         }
 
-        bool isRunning {
+        public bool isRunning {
             get {
                 if (_tcpServer == null || _udpServer == null) {
                     return false;

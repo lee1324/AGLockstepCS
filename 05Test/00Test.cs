@@ -8,13 +8,13 @@ namespace AGSyncCS
 {
     public class TcpServerClientTest
     {
+
         public static void RunTest()
         {
             Logger.Info("=== TCP Server & Client Test ===");
 
             // Give server a moment to ensure it's ready
       
-            Logger.Info("--- Testing Test_InLocalWifi ---");
 
             if (false) {
                 Logger.Info("--- test port taken ---");
@@ -30,28 +30,32 @@ namespace AGSyncCS
                 }
             }
 
+
             BandServers servers = new BandServers();
+
+            for(int i = 0; i < 5; ++i){
+                Logger.Info("=== Start Servers Once :" + i + " ===");
+                servers.start(() => {
+                    Logger.Info(string.Format("Server started successfully portTCP:{0} portUDP:{1} ",
+                        servers.portTCP, servers.portUDP));
+                     //servers.stop();//不可在start回调中stop，否则会导致服务器无法启动
+                }, (errorCode) => {
+                    Logger.Error("Failed to start server, error code: " + errorCode);
+                });
+                Thread.Sleep(500);//give server some time to start
+                Logger.Info("=== Stop Servers ===");
+                servers.stop();
+            }
+
+            //finally start
             servers.start(() => {
-                Logger.Info(string.Format("Server started successfully portTCP:{0} portUDP:{1} ",
+                 Logger.Info(string.Format("Server started successfully portTCP:{0} portUDP:{1} ",
                     servers.portTCP, servers.portUDP));
-            }, (errorCode) => {
-                Logger.Error("Failed to start server, error code: " + errorCode);
-            });
-            Thread.Sleep(1000);//give server a moment 2 start
+             }, (errorCode) => {
+                    Logger.Error("Failed to start server, error code: " + errorCode);
+             });
+            Thread.Sleep(500);//give server some time to start;
 
-            Logger.Info("=== Test Server Stop === ");
-            servers.stop();
-            Thread.Sleep(500);
-
-            servers.start(() => {
-                Logger.Info(string.Format("Server started successfully portTCP:{0} portUDP:{1} ",
-                    servers.portTCP, servers.portUDP));
-            }, (errorCode) => {
-                Logger.Error("Failed to start server, error code: " + errorCode);
-            });
-
-            Logger.Info("=== Test Complete ===");
-            return;
 
             var clients = new BandClient[Config.MaxPlayersPerRoom];
             //owner is clients[0], ignore localClients[0]
@@ -69,7 +73,8 @@ namespace AGSyncCS
 
             Thread.Sleep(3000);//give all clients some time to check connection
 
-
+            Logger.Info("=== Test Complete ===");
+            return;
 
             for (int i = 0; i < clients.Length; ++i) {
                 clients[i].onPush(Protocals.StartLoading, (sm) => {
