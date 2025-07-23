@@ -72,29 +72,33 @@ namespace AGSyncCS{
                 receiveThread = new Thread(ReceiveLoop);
                 receiveThread.Start();
 
-                var cm = new CM_HandShake();
+                var cm = new CM_TestServer();
                 cm.shakeI = serverPort + 2;
                 cm.onResponse = (sm_response) => {
-                    var sm = (SM_HandShake)sm_response;
-                    Logger.Debug("C Handshake response: " + sm.ToString());
+                    var sm = (SM_TestServer)sm_response;
+                    
                     if (sm.shakeI == cm.shakeI * 2) {
                         var heatBeatThread = new Thread(_heatBeatLoop);
                         heatBeatThread.Start();
                         if (_onSuccess != null) 
                             _onSuccess();
                     }
-                    else 
+                    else { 
                         onShakeFail();
+                        //1/2 要么能连，但不是我们的服务器（这里）
+                        if (_onFail != null) _onFail("shake fail");
+                    }
                 };
                 Send(cm);
-
-
             }
             catch (Exception ex) {
-                Logger.Warning(string.Format("Failed to connect to TCP server {0}:{1}: {2}",
+                //connect 有遍历重试不同port的机制，所以不要再抛了，在上面 成功/失败中处理
+                Logger.Warning(string.Format("try but fail to connect to TCP server {0}:{1}:{2}",
                     serverAddress, serverPort, ex.Message));
                 //If it's taken by another app, u wouldn't know
                 //need a protocal of handshake
+                //2/2 要么中途异常走这里 
+                if (_onFail != null) _onFail(ex.Message);
             }
         }
 

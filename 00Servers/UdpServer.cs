@@ -4,6 +4,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.IO;
+using System.Security.Permissions;
 
 namespace AGSyncCS
 {
@@ -67,9 +68,7 @@ namespace AGSyncCS
 
                     int errorCode = ErrorCode.None;
                     SM sm = null;
-                    if(cm.GetType() == typeof(CM_Sync)) {//dispatch()
-                        on((CM_Sync)cm, ref errorCode, ref sm);
-                    }
+                    dispatch(protocal, cm, ref errorCode, ref sm);
 
                     var sendBuffer = new byte[Config.BUFFER_SIZE];
                     var ms = new MemoryStream(sendBuffer);

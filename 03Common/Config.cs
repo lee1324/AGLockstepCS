@@ -23,7 +23,7 @@ namespace AGSyncCS
         /// 少数情况下，port被占用了，就加1再尝试，最多重试这么多次
         /// 所以各服务器端口相差 比这个值要大
         /// </summary>
-        public const int MAX_PORT_RETRY = 10;
+        public const int MAX_PORT_RETRY = 3;
 
         // TCP Server Configuration
         public const int TCP_SERVER_PORT = 9001;

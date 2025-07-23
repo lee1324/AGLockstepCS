@@ -10,7 +10,9 @@ namespace AGSyncCS {
 
 
         public const int None    = 00;//no error, no message,used for init
-        public const int HandShake = 2;//握手协议，客户端和服务器端建立连接时发送
+        public const int TestServer = 2;//检查tcp ip/port是不是我们的后端（能连的不定是，一定要发个看能否正常回来，就发这个）
+        public const int SearchRoom = 10;//udp search room
+
 
         public const int Heartbeat = 11;//心跳包，客户端每隔一段时间发送一次，服务器端收到后回复
         public const int ServerError = 12;//错误信息，服务器端发送给客户端
@@ -45,8 +47,9 @@ namespace AGSyncCS {
             else if (cmType == typeof(CM_QuitRoom)) p = QuitRoom;
             else if (cmType == typeof(CM_LoadingProgress)) p = LoadingProgress;
             else if (cmType == typeof(CM_Sync)) p = Sync;
-            else if (cmType == typeof(CM_HandShake)) p = HandShake;
-                return p;
+            else if (cmType == typeof(CM_TestServer)) p = TestServer;
+            else if (cmType == typeof(CM_SearchRoom)) p = SearchRoom;
+            return p;
         }
 
   
@@ -64,7 +67,8 @@ namespace AGSyncCS {
             else if (protocal == QuitRoom) return new CM_QuitRoom();
             else if (protocal == LoadingProgress) return new CM_LoadingProgress();
             else if (protocal == Sync) return new CM_Sync();
-            else if (protocal == HandShake) return new CM_HandShake();
+            else if (protocal == TestServer) return new CM_TestServer();
+            else if (protocal == SearchRoom) return new CM_SearchRoom();
             return null;
         }
 
@@ -82,7 +86,8 @@ namespace AGSyncCS {
             else if (protocal == StartLoading) return new SM_StartLoading();
             else if (protocal == LoadingProgress) return new SM_LoadingProgress();
             else if (protocal == Sync) return new SM_Sync();
-            else if (protocal == HandShake) return new SM_HandShake();
+            else if (protocal == TestServer) return new SM_TestServer();
+            else if (protocal == SearchRoom) return new SM_SearchRoom();
             return null;
         }
 

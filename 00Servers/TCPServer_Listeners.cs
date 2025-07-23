@@ -40,10 +40,10 @@ namespace AGSyncCS {
                 on((CM_HeartBeat)cm, ref errorCode, ref sm_response);
             else if (protocal == Protocals.LoadingProgress)
                 on((CM_LoadingProgress)cm, ref errorCode, ref sm_response);
-            else if (protocal == Protocals.HandShake)
-                on((CM_HandShake)cm, ref errorCode, ref sm_response);
 
-            else Logger.Warning("No dispatch:" + protocal);
+            else if (protocal == Protocals.TestServer)
+                on((CM_TestServer)cm, ref errorCode, ref sm_response);
+            else Logger.Warning("tcp server No dispatch:" + protocal);
         }
 
         void on(CM_HeartBeat cm, ref int errorCode, ref SM sm_response) {
@@ -52,17 +52,19 @@ namespace AGSyncCS {
             sm_response = sm;
         }
 
-
-         void on(CM_HandShake cm, ref int errorCode, ref SM sm_response) {
-            var sm = new SM_HandShake();
+        /// <summary>
+        /// tcp 连通不定有效，必须要发一个包试试是否是我们的后端（就发这个握手包试）
+        /// </summary>
+        /// <param name="cm"></param>
+        /// <param name="errorCode"></param>
+        /// <param name="sm_response"></param>
+        void on(CM_TestServer cm, ref int errorCode, ref SM sm_response) {
+            var sm = new SM_TestServer();
             sm.shakeI = cm.shakeI * 2;//check protocal
-            sm.versionCode = Protocals.VersionCode;//check version
-
-            sm.udpIP = Tools.GetLocalIP();
-            //lstodo sm.udpPort = ;//udp port
-
+            sm.shakeStr = cm.shakeStr;
             sm_response = sm;
-         }
+        }
+
 
 
         
@@ -140,15 +142,4 @@ namespace AGSyncCS {
         }
     }
 
-    partial class UDP_Server {
-        public string syncData = "";//last valid syncData;
-        void on(CM_Sync cm , ref int errorCode, ref SM sm_response) {
-            if(cm.pos == 0) {//owner
-                syncData = cm.syncData;
-            }
-            var sm = new SM_Sync();
-            sm.syncData = syncData;
-            sm_response = sm;
-        }
-    }
 }

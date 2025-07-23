@@ -60,18 +60,33 @@ namespace AGSyncCS
             var clients = new BandClient[Config.MaxPlayersPerRoom];
             //owner is clients[0], ignore localClients[0]
 
+            for (int i = 0; i < clients.Length; ++i) {
+                var c = new BandClient();
+                clients[i] = c;
+                c.pos = i;
+            }
+
+            Logger.Info("=== test search rooms ===");
+            clients[0].searchRooms((roomsIDs) => {
+                for(int i = 0; i < roomsIDs.Length; ++i){
+                    Logger.Info(string.Format("    roomdsIDs[{0}]:{1}", i, roomsIDs[i]));
+                }
+            });
+
+            Thread.Sleep(1000);//give some time to search rooms
+
+            Logger.Info("=== test connect to room ===");
             const string roomID = "007024";//for test in A285
 
-            Logger.Info("--- client starts one by one ---");
-            for (int i = 0; i < clients.Length; ++i) {
-                var c = new BandClient(roomID, i).start(() => {
-                    Logger.Info(string.Format("C Test_InLocalWifi Client {0} started", i));
+            foreach(var c in clients) {
+                Logger.Debug("c.Pos:" + c.pos);
+                c.connect(roomID, () => {
+                    Logger.Info(string.Format("Client[0] connected", c.pos));
                 });
-                clients[i] = c;
                 Thread.Sleep(100);
-             }
+            }
 
-            Thread.Sleep(3000);//give all clients some time to check connection
+            Thread.Sleep(5000);//search rooms needs a lot of time, give all clients some time to check connection
 
             Logger.Info("=== Test Complete ===");
             return;
