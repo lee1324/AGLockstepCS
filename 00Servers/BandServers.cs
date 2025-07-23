@@ -7,10 +7,22 @@ namespace AGSyncCS {
     /// <summary>
     /// 这是一个管理类外面调用此类接口
     /// </summary>
-    public class BandServer {
-        public static BandServer Instance = null;
+    public class BandServers {
+        public static BandServers Instance = null;
+        public TCP_Server tcpServer {
+            get { return _tcpServer; }
+        }
+        public Room room {
+            get{
+                if (_tcpServer == null || _udpServer == null) {
+                    Logger.Error("BandServer not started");
+                    return null;
+                }
+                return _tcpServer.room;
+            }
+        }
 
-        public BandServer() {
+        public BandServers() {
             if (Instance != null)
                 Logger.Error("BandServer is Instanced");
             Instance = this;
@@ -26,7 +38,7 @@ namespace AGSyncCS {
             _udpServer = new UDP_Server();
 
             _tcpServer.start(() => {
-                Logger.Warning("Tcp server starts successfullly on port:" + _tcpServer.port);
+                Logger.Debug("Tcp server starts successfullly on port:" + _tcpServer.port);
                 if (isRunning) onSuccess();
             }, (errorCode) => {
                 Logger.Warning("Tcp server starts failed, error:" + errorCode);
@@ -43,6 +55,17 @@ namespace AGSyncCS {
             });
         }
 
+        public void stop() {
+            if(_tcpServer != null) {
+                _tcpServer.Stop();
+                _tcpServer = null;
+            }
+            if(_udpServer != null) {
+                _udpServer.Stop();
+                _udpServer = null;
+            }
+        }
+
         bool isRunning {
             get {
                 if (_tcpServer == null || _udpServer == null) {
@@ -56,8 +79,6 @@ namespace AGSyncCS {
         }
 
 
-        public void close() {
-
-        }
+ 
     }
 }

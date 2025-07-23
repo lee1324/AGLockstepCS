@@ -30,14 +30,25 @@ namespace AGSyncCS
                 }
             }
 
-            BandServer server = new BandServer();
-            server.start(() => {
+            BandServers servers = new BandServers();
+            servers.start(() => {
                 Logger.Info(string.Format("Server started successfully portTCP:{0} portUDP:{1} ",
-                    server.portTCP, server.portUDP));
+                    servers.portTCP, servers.portUDP));
             }, (errorCode) => {
                 Logger.Error("Failed to start server, error code: " + errorCode);
             });
             Thread.Sleep(1000);//give server a moment 2 start
+
+            Logger.Info("=== Test Server Stop === ");
+            servers.stop();
+            Thread.Sleep(500);
+
+            servers.start(() => {
+                Logger.Info(string.Format("Server started successfully portTCP:{0} portUDP:{1} ",
+                    servers.portTCP, servers.portUDP));
+            }, (errorCode) => {
+                Logger.Error("Failed to start server, error code: " + errorCode);
+            });
 
             Logger.Info("=== Test Complete ===");
             return;
@@ -89,7 +100,7 @@ namespace AGSyncCS
                      Logger.Error(string.Format("ClientId {0} Error: {1}", clientId, ex.Message));
                  }
                  Thread.Sleep(1000);
-                 TCP_Server.Instance.room.printState();
+                 servers.room.printState();
              }
 
 
@@ -113,7 +124,7 @@ namespace AGSyncCS
                      Logger.Error(string.Format("ClientId {0} Error: {1}", clientId, ex.Message));
                  }
                  Thread.Sleep(1000);
-                 TCP_Server.Instance.room.printState();
+                 servers.room.printState();
              }
 
              Logger.Debug("\n");
@@ -139,11 +150,11 @@ namespace AGSyncCS
                      Logger.Error(string.Format("ClientId {0} Error: {1}", clientId, ex.Message));
                  }
                  Thread.Sleep(1000);
-                 TCP_Server.Instance.room.printState();
+                 servers.room.printState();
             }
 
             Thread.Sleep(1000);
-            TCP_Server.Instance.notifyStartLoading();
+            servers.tcpServer.notifyStartLoading();
             Thread.Sleep(1000);
             for(int i = 0; i < clients.Length; ++i){
                 var client = clients[i];

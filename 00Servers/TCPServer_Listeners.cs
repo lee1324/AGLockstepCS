@@ -72,7 +72,7 @@ namespace AGSyncCS {
 
         void on(CM_EnterRoom cm, ref int errorCode, ref SM sm_response) {
             var roomID = cm.roomID;
-            var localRoom = TCP_Server.Instance.room;
+            var localRoom = server.room;
             if (cm.pos < 0 || cm.pos > Config.MaxPlayersPerRoom) {
                 errorCode = ErrorCode.InvalidPosition;//invalid position
                 Logger.Error("Invalid position: " + cm.pos);
@@ -100,7 +100,7 @@ namespace AGSyncCS {
 
         void on(CM_QuitRoom cm, ref int errorCode, ref SM sm_response) {
             var roomID = cm.roomID;
-            var localRoom = TCP_Server.Instance.room;
+            var localRoom = server.room;
             if (roomID == localRoom.ID) {
                 //step 04: join or remove user from local room
                 if (localRoom.usersConnections[cm.pos] != null &&
@@ -120,11 +120,11 @@ namespace AGSyncCS {
 
         void on(CM_LoadingProgress cm, ref int errorCode, ref SM sm_response) {
             var sm = new SM_LoadingProgress();
-            TCP_Server.Instance.room.loadingProgresses0_100[cm.pos] = cm.progress0_100;
+            BandServers.Instance.room.loadingProgresses0_100[cm.pos] = cm.progress0_100;
             sm.usersLoadingProgress0_100 = new int[Config.MaxPlayersPerRoom];
 
             for(int i = 0; i < Config.MaxPlayersPerRoom; i++) {
-                sm.usersLoadingProgress0_100[i] = TCP_Server.Instance.room.loadingProgresses0_100[i];
+                sm.usersLoadingProgress0_100[i] = server.room.loadingProgresses0_100[i];
             }
             sm_response = sm;
 

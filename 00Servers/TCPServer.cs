@@ -13,7 +13,6 @@ namespace AGSyncCS
 {
     public partial class TCP_Server : ServerBase {
 
-        public static TCP_Server Instance;
         
         private TcpListener listener;
 
@@ -29,8 +28,8 @@ namespace AGSyncCS
         {
             this.PortBase = Config.TCP_SERVER_PORT;
 
-            if (Instance == null) Instance = this;
-            else Logger.Error("TCP_Server instance already exists, using singleton pattern");
+            //if (Instance == null) Instance = this;
+            //else Logger.Error("TCP_Server instance already exists, using singleton pattern");
 
             this.maxConnections = Config.TCP_MAX_CONNECTIONS;
             this.tcpConnectionTimeOut = Config.TCP_CONNECTION_TIMEOUT;

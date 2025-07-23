@@ -17,7 +17,7 @@ namespace AGSyncCS {
                 Logger.Error("Set PortBase in constructor of derived class !!!");
                 return;
             }
-            if (_port == -1) _port = PortBase;//init
+            _port = PortBase;//start coule be called multiple times, so reset port
 
             if (_isRunning)
                 return;
@@ -25,12 +25,12 @@ namespace AGSyncCS {
             int retryTimes = 0;
             while(!_isRunning){
                 try {
-                    if(retryTimes > 0) {
+                    if(retryTimes > 0) 
                         Logger.Warning("start tcp retry times:" + retryTimes + " port:" + _port);
-                    }
                     tryPort();
                     _isRunning = true;
-                    if (onSuccess != null) onSuccess();
+                    if (onSuccess != null) 
+                        onSuccess();
                 }
                 catch (Exception ex) {//Port taken
                     Logger.Warning(string.Format("Failed to start {0} server:{1}", this.GetType(), ex.Message));
