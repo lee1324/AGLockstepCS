@@ -36,6 +36,8 @@ namespace AGSyncCS
             enableFileOutput = Config.ENABLE_FILE_OUTPUT;
             logQueue = new Queue<LogEntry>();
             isRunning = false;
+
+			Start ();
         }
 
         public static string LogFilePath
@@ -69,7 +71,7 @@ namespace AGSyncCS
 
             isRunning = true;
             logWorkerThread = new Thread(ProcessLogQueue);
-            logWorkerThread.IsBackground = true;
+            //logWorkerThread.IsBackground = true;
             logWorkerThread.Start();
         }
 
@@ -210,10 +212,19 @@ namespace AGSyncCS
                 entry.Message);
         }
 
-        public static Action<string> Func_Print = null;
+		static void Print(string message){
+			#if UNITY_64
+			UnityEngine.Debug.Log(message);
+			#else
+			Console.WriteLine(message);
+			#endif
+		}
+
         private static void WriteToConsole(LogLevel level, string message)
         {
-            if (Func_Print == null) {
+			#if UNITY_64
+			Print(message);
+			#else
                 ConsoleColor originalColor = Console.ForegroundColor;
 
                 switch (level) {
@@ -234,10 +245,9 @@ namespace AGSyncCS
                         break;
                 }
 
-                Console.WriteLine(message);
+			    Console.WriteLine(message);
                 Console.ForegroundColor = originalColor;
-            }
-            else Func_Print(message);
+			#endif
         }
 
         private static void WriteToFile(string message)
@@ -252,8 +262,8 @@ namespace AGSyncCS
             catch (Exception ex)
             {
                 // Fallback to console if file writing fails
-                Console.WriteLine("Failed to write to log file: " + ex.Message);
-                Console.WriteLine("Log message: " + message);
+                Print("Failed to write to log file: " + ex.Message);
+                Print("Log message: " + message);
             }
         }
 
@@ -271,7 +281,7 @@ namespace AGSyncCS
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Failed to clear log file: " + ex.Message);
+                Print("Failed to clear log file: " + ex.Message);
             }
         }
 
@@ -295,7 +305,7 @@ namespace AGSyncCS
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Failed to read log file: " + ex.Message);
+                Print("Failed to read log file: " + ex.Message);
                 return new string[0];
             }
         }

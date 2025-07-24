@@ -85,7 +85,7 @@ namespace AGSyncCS {
                         int messasgeUID = 0;
 
                         if (cm == null) {//error or malicious
-                            Logger.Warning($"CM == null, protocal: {protocal} from {remoteEndPoint}");
+                            Logger.Warning(string.Format("CM == null, protocal: {0} from {1}", protocal, remoteEndPoint));
                             continue;
                         }
                         else {

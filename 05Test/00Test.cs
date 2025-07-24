@@ -1,13 +1,11 @@
-using SimpleJson;
 using System;
-using System.Drawing;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 
 namespace AGSyncCS
 {
-    public class TcpServerClientTest
+    public class Test
     {
         BandClient[] clients = null;
 
