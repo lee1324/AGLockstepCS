@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using static System.Collections.Specialized.BitVector32;
 
 namespace AGSyncCS {
 
@@ -30,13 +31,13 @@ namespace AGSyncCS {
         /// <param name="onSuccess"></param>
         /// <param name="onFail"></param>
         /// <returns></returns>
-        public BandClient connect(string roomID, Action onSuccess, Action onFail = null) {
+        public BandClient enterRoom(string roomID, Action onSuccess, Action onFail = null) {
             this.roomID = roomID;
             var serverIP = Tools.RoomID2IP(roomID);
 
             //tcp支持动态端口：测几个端口，哪个有回应就用哪个
             for(int i = 0; i < Config.MAX_PORT_RETRY; ++i) {
-                var c = new TCPClientWrapper();
+                var c = new TCPClientWrapper(this);
                 int tryPort = Config.TCP_SERVER_PORT + i;
 
                 c.connect(serverIP, tryPort, () => {
@@ -80,8 +81,9 @@ namespace AGSyncCS {
                 var cm = new CM_SearchRoom();
                 cm.str = testIP;//will be echo back
 
-                cm.onResponse = (response) => {
-                    var sm = (SM_SearchRoom)response;
+                cm.onResponse = (sm_response) => {
+                    var sm = (SM_SearchRoom)sm_response;
+                    Logger.Debug("SM_SearchRoom on IP:" + sm.str);
                     if (!_searchedIP.Contains(sm.str))
                         _searchedIP.Add(sm.str);
                 };
@@ -111,11 +113,28 @@ namespace AGSyncCS {
             else  _udpClient.Close();
         }
 
-        public void onPush(int protocal, Action<SM> onResponse) {
-            if(_tcpClient == null)
-                Logger.Warning("onPush called but _tcpClient is null");
-            else _tcpClient.onPush(protocal, onResponse);
+
+
+        /*用户在实例化当煎类后，就可能立即加Push监听
+         * 但tcpClient还未存在（它是在connect成功后才创建的）
+         所以把监听放在当前类里
+        tcp收到push后，再转接过来调用监听
+         
+         */
+        public void onPush(int protocal, Action<SM> action) {
+            _pushListeners[protocal] = action;
         }
+
+        public void dispatchPush(int protocal, SM sm) {
+            if (_pushListeners.ContainsKey(protocal)) {
+                _pushListeners[protocal](sm);
+            }
+            else {
+                Logger.Error("BandClient dispatchPush: no listener for protocal " + protocal);
+            }
+        }
+
+        Dictionary<int, Action<SM>> _pushListeners = new Dictionary<int, Action<SM>>();//Protocal - Action
 
         //band client 内是 TCP 和 UDP 的封装
         TCPClientWrapper _tcpClient = null;

@@ -7,12 +7,9 @@ namespace AGSyncCS {
     {
         public const int VersionCode =  1;//协议更新版本， 前端获取，和后端对比 由HandShake请求
 
-
-
         public const int None    = 00;//no error, no message,used for init
-        public const int TestServer = 2;//检查tcp ip/port是不是我们的后端（能连的不定是，一定要发个看能否正常回来，就发这个）
+        public const int TestConnection = 2;//检查tcp ip/port是不是我们的后端（能连的不定是，一定要发个看能否正常回来，就发这个）
         public const int SearchRoom = 10;//udp search room
-
 
         public const int Heartbeat = 11;//心跳包，客户端每隔一段时间发送一次，服务器端收到后回复
         public const int ServerError = 12;//错误信息，服务器端发送给客户端
@@ -23,9 +20,11 @@ namespace AGSyncCS {
         public const int NewRoom   = 51;
         public const int EnterRoom = 52;
         public const int QuitRoom  = 53;//客户端退出房间
+        public const int TakePos = 54;
+        public const int CancelPos = 55;
 
-        public const int StartLoading = 54;//server push message to clients to start loading
-        public const int LoadingProgress = 55;
+        public const int StartLoading = 61;//server push message to clients to start loading
+        public const int LoadingProgress = 62;
 
         public const int Sync = 60;//udp
 
@@ -47,8 +46,10 @@ namespace AGSyncCS {
             else if (cmType == typeof(CM_QuitRoom)) p = QuitRoom;
             else if (cmType == typeof(CM_LoadingProgress)) p = LoadingProgress;
             else if (cmType == typeof(CM_Sync)) p = Sync;
-            else if (cmType == typeof(CM_TestServer)) p = TestServer;
+            else if (cmType == typeof(CM_TestConnection)) p = TestConnection;
             else if (cmType == typeof(CM_SearchRoom)) p = SearchRoom;
+            else if (cmType == typeof(CM_TakePos)) p = TakePos;
+            else if (cmType == typeof(CM_CancelPos)) p = CancelPos;
             return p;
         }
 
@@ -67,13 +68,15 @@ namespace AGSyncCS {
             else if (protocal == QuitRoom) return new CM_QuitRoom();
             else if (protocal == LoadingProgress) return new CM_LoadingProgress();
             else if (protocal == Sync) return new CM_Sync();
-            else if (protocal == TestServer) return new CM_TestServer();
+            else if (protocal == TestConnection) return new CM_TestConnection();
             else if (protocal == SearchRoom) return new CM_SearchRoom();
+            else if (protocal == TakePos) return new CM_TakePos();
+            else if (protocal == CancelPos) return new CM_CancelPos();
             return null;
         }
 
         /// <summary>
-        /// 前端收到包时解析
+        /// 前端收到包时解析(push or response)
         /// </summary>
         /// <param name="protocal"></param>
         /// <returns></returns>
@@ -86,17 +89,21 @@ namespace AGSyncCS {
             else if (protocal == StartLoading) return new SM_StartLoading();
             else if (protocal == LoadingProgress) return new SM_LoadingProgress();
             else if (protocal == Sync) return new SM_Sync();
-            else if (protocal == TestServer) return new SM_TestServer();
+            else if (protocal == TestConnection) return new SM_TestConnection();
             else if (protocal == SearchRoom) return new SM_SearchRoom();
+            else if (protocal == TakePos) return new SM_TakePos();
+            else if (protocal == CancelPos) return new SM_CancelPos();
             return null;
         }
 
 
-        //for push only
+        //后端push sm信息时需要
         public static int GetProtocal(SM sm) {
             int p = None;
             var smType = sm.GetType();
             if (smType == typeof(SM_StartLoading)) p = StartLoading;
+            else if (smType == typeof(SM_TakePos)) p = TakePos;
+            else if (smType == typeof(SM_CancelPos)) p = CancelPos; 
             //PUSH ONLY!!!
             return p;
         }

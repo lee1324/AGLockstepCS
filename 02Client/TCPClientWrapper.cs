@@ -29,7 +29,7 @@ namespace AGSyncCS{
   
     class TCPClientWrapper
     {
-
+        private BandClient bandClient;
 
         private System.Net.Sockets.TcpClient client;
         private NetworkStream stream;
@@ -40,13 +40,15 @@ namespace AGSyncCS{
         private Thread receiveThread;
         private readonly object streamLock = new object();
 
-        public TCPClientWrapper() {
+        public TCPClientWrapper(BandClient bc) {
+            bandClient = bc;
             this.timeout = 30000;
         }
 
         Action _onSuccess;
         Action<string> _onFail;
-        public TCPClientWrapper connect(string IP, int port, Action onSuccess, Action<string> onFail) {
+        public TCPClientWrapper connect(string IP, int port,
+            Action onSuccess, Action<string> onFail) {
             _onSuccess = onSuccess;
             _onFail    = onFail;
             serverPort = port;
@@ -72,10 +74,10 @@ namespace AGSyncCS{
                 receiveThread = new Thread(ReceiveLoop);
                 receiveThread.Start();
 
-                var cm = new CM_TestServer();
+                var cm = new CM_TestConnection();
                 cm.shakeI = serverPort + 2;
                 cm.onResponse = (sm_response) => {
-                    var sm = (SM_TestServer)sm_response;
+                    var sm = (SM_TestConnection)sm_response;
                     
                     if (sm.shakeI == cm.shakeI * 2) {
                         var heatBeatThread = new Thread(_heatBeatLoop);
@@ -93,8 +95,8 @@ namespace AGSyncCS{
             }
             catch (Exception ex) {
                 //connect 有遍历重试不同port的机制，所以不要再抛了，在上面 成功/失败中处理
-                Logger.Warning(string.Format("try but fail to connect to TCP server {0}:{1}:{2}",
-                    serverAddress, serverPort, ex.Message));
+                //Logger.Warning(string.Format("try but fail to connect to TCP server {0}:{1}:{2}",
+                //   serverAddress, serverPort, ex.Message));
                 //If it's taken by another app, u wouldn't know
                 //need a protocal of handshake
                 //2/2 要么中途异常走这里 
@@ -107,12 +109,9 @@ namespace AGSyncCS{
         }
 
         byte[] sendBuffer = new byte[Config.BUFFER_SIZE];
-        Dictionary<int, Action<SM>> _pushListeners = new Dictionary<int, Action<SM>>();//Protocal - Action
         Dictionary<int, Action<SM>> _listeners = new Dictionary<int, Action<SM>>();//MsgUID - Action
 
-        public void onPush(int protocal, Action<SM> action) {
-            _pushListeners[protocal] = action;
-        }
+
         public void Send(CM cm)
         {
             Logger.Debug("C Send() " + cm.ToString());
@@ -198,9 +197,7 @@ namespace AGSyncCS{
                              Logger.Warning("SM not found by protocal:" + protocal);
                          else {
                              sm.readFrom(reader);
-                             Action<SM> ls;
-                             if(_pushListeners.TryGetValue(protocal, out ls)) 
-                                ls(sm);
+                             bandClient.dispatchPush(protocal, sm);
                          }
                     }
                     else if (iMessageType == (int)eMessageType.Response)

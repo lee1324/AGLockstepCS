@@ -21,7 +21,7 @@ namespace AGSyncCS
             Logger.Start();
             
             
-            TcpServerClientTest.RunTest();
+            new TcpServerClientTest().RunTest();
 
             while (true) {
                 Thread.Sleep(33);

@@ -8,7 +8,7 @@ namespace AGSyncCS {
     /// <summary>
     /// 用此协议检查server通不通，是不是我们的server（可用做搜索)
     /// </summary>
-    public class CM_TestServer : CM {
+    public class CM_TestConnection : CM {
         /// <summary>
         /// 目前房主发0是会被server缓存的，其他成员发自己的位置（但不会被server记住）
         /// </summary>
@@ -31,7 +31,7 @@ namespace AGSyncCS {
             
     }
 
-    public class SM_TestServer : SM {
+    public class SM_TestConnection : SM {
         public int shakeI;
         public string shakeStr;
         

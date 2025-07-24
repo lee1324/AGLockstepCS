@@ -16,9 +16,13 @@ namespace AGSyncCS {
         /// <summary>
         /// 0 owner(could be null), 1,2,3 as other members(not null)
         /// </summary>
-        public TcpClientConnection[] usersConnections;//used in local wifi
-        public string[] usersNames;
+        public List<TcpClientConnection> usersConnections;//used in local wifi
         public int[] loadingProgresses0_100;
+
+        /// <summary>
+        /// 被占用的位置（如0，1，2，3，哪个被 占用了就add进来，取消了就移除掉）
+        /// </summary>
+        public List<int> posesTaken = null;
 
 
         public eRoomState roomState;
@@ -32,9 +36,9 @@ namespace AGSyncCS {
         public Room() {
             roomState = eRoomState.Idle;
             startTime = DateTime.Now;
-            usersConnections = new TcpClientConnection[Config.MaxPlayersPerRoom];
+            usersConnections = new List<TcpClientConnection>();
 
-            usersNames = new string[Config.MaxPlayersPerRoom];
+            posesTaken = new List<int>();
             loadingProgresses0_100 = new int[Config.MaxPlayersPerRoom];
         }
 
@@ -45,9 +49,9 @@ namespace AGSyncCS {
         }
 
         public void printState() {
-            for(int i = 1; i < usersConnections.Length; i++) {
+            for(int i = 1; i < usersConnections.Count; i++) {
                 if (usersConnections[i] != null) {
-                    Logger.Info(string.Format("member[{0}] name:{1} IP:{2}", i,  usersNames[i],  usersConnections[i].RemoteEndPoint));
+                    Logger.Info(string.Format("member[{0}] IP:{1}", i,  usersConnections[i].RemoteEndPoint));
                 } else {
                     Logger.Info(string.Format("member[{0}] empty", i));
                 }

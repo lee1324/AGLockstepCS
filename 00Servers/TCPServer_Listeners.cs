@@ -17,10 +17,12 @@ namespace AGSyncCS {
         /// </summary>
         public void notifyStartLoading() {
             room.resetLoadingProgresses();
-            foreach(var connection in activeConnections) {
-                var sm = new SM_StartLoading();
+            push(new SM_StartLoading());
+        }
+
+        public void push(SM sm) {
+             foreach(var connection in activeConnections) 
                 connection.push(sm);
-            }
         }
     }
 
@@ -41,8 +43,16 @@ namespace AGSyncCS {
             else if (protocal == Protocals.LoadingProgress)
                 on((CM_LoadingProgress)cm, ref errorCode, ref sm_response);
 
-            else if (protocal == Protocals.TestServer)
-                on((CM_TestServer)cm, ref errorCode, ref sm_response);
+            else if (protocal == Protocals.TestConnection)
+                on((CM_TestConnection)cm, ref errorCode, ref sm_response);
+            else if (protocal == Protocals.TakePos)
+                on((CM_TakePos)cm, ref errorCode, ref sm_response);
+            else if (protocal == Protocals.CancelPos)
+                on((CM_CancelPos)cm, ref errorCode, ref sm_response);
+            else if (protocal == Protocals.Sync)
+                ;//udp message ignore here on((CM_Sync)cm, ref errorCode, ref sm_response);
+
+
             else Logger.Warning("tcp server No dispatch:" + protocal);
         }
 
@@ -58,16 +68,45 @@ namespace AGSyncCS {
         /// <param name="cm"></param>
         /// <param name="errorCode"></param>
         /// <param name="sm_response"></param>
-        void on(CM_TestServer cm, ref int errorCode, ref SM sm_response) {
-            var sm = new SM_TestServer();
+        void on(CM_TestConnection cm, ref int errorCode, ref SM sm_response) {
+            var sm = new SM_TestConnection();
             sm.shakeI = cm.shakeI * 2;//check protocal
             sm.shakeStr = cm.shakeStr;
             sm_response = sm;
         }
 
+        void on(CM_TakePos cm, ref int errorCode, ref SM sm_response) {
+            var localRoom = server.room;
+            if (localRoom.posesTaken.Contains(cm.pos)) 
+                errorCode = ErrorCode.PositionOccupied;
+            else {
+                var sm = new SM_TakePos();
+                localRoom.posesTaken.Add(cm.pos);
+                sm.pos = cm.pos;
+                sm.posesTaken = localRoom.posesTaken.ToArray();
+                sm_response = sm;
 
+                //push to all clients
+                server.push(sm);
+            }
+        }
 
-        
+        void on(CM_CancelPos cm, ref int errorCode, ref SM sm_response) {
+            var localRoom = server.room;
+            if (localRoom.posesTaken.Contains(cm.pos))
+                localRoom.posesTaken.Remove(cm.pos);
+            else
+                Logger.Debug("CancelPos on a empty one:" + cm.pos);
+
+          
+            var sm = new SM_CancelPos();
+            sm.pos = cm.pos;
+            sm.posesTaken = localRoom.posesTaken.ToArray();
+            sm_response = sm;
+
+            //push to all clients
+            server.push(sm);
+        }
 
         //None in local network/Wifi
         void on(CM_NewRoom cm, ref int errorCode, ref SM sm_response) { }
@@ -75,26 +114,15 @@ namespace AGSyncCS {
         void on(CM_EnterRoom cm, ref int errorCode, ref SM sm_response) {
             var roomID = cm.roomID;
             var localRoom = server.room;
-            if (cm.pos < 0 || cm.pos > Config.MaxPlayersPerRoom) {
-                errorCode = ErrorCode.InvalidPosition;//invalid position
-                Logger.Error("Invalid position: " + cm.pos);
-                return;
-            }
+    
             if (roomID == localRoom.ID) {
-                //step 03: add user to local room
-                if(localRoom.usersConnections[cm.pos] != null &&
-                    localRoom.usersConnections[cm.pos].remoteEndPoint.ToString() != this.remoteEndPoint.ToString())
-                    errorCode = ErrorCode.PositionOccupied;//position occupied
-                else {
-                    localRoom.usersConnections[cm.pos] = this ;
-                    localRoom.usersNames[cm.pos] = cm.nickname;//set nickname
-                    var sm = new SM_EnterRoom();
+                localRoom.usersConnections.Add(this) ;
+                //localRoom.usersNames[cm.pos] = cm.nickname;//set nickname
+                var sm = new SM_EnterRoom();
 
-                    sm.pos = cm.pos;
-                    sm.roomID = roomID;
-                    sm_response = sm;//set response to client
-                }
-                Logger.Debug(string.Format("User entered local room:{0} pos:{1}", roomID, cm.pos));
+                sm.roomID = roomID;
+                sm_response = sm;//set response to client
+                Logger.Debug(string.Format("User entered local room:{0} ", roomID));
             } else {
                 errorCode = ErrorCode.RoomNotFound;//room not found
             }
