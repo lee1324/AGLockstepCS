@@ -210,31 +210,34 @@ namespace AGSyncCS
                 entry.Message);
         }
 
+        public static Action<string> Func_Print = null;
         private static void WriteToConsole(LogLevel level, string message)
         {
-            ConsoleColor originalColor = Console.ForegroundColor;
+            if (Func_Print == null) {
+                ConsoleColor originalColor = Console.ForegroundColor;
 
-            switch (level)
-            {
-                case LogLevel.Debug:
-                    Console.ForegroundColor = ConsoleColor.Gray;
-                    break;
-                case LogLevel.Info:
-                    Console.ForegroundColor = ConsoleColor.White;
-                    break;
-                case LogLevel.Warning:
-                    Console.ForegroundColor = ConsoleColor.Yellow;
-                    break;
-                case LogLevel.Error:
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    break;
-                case LogLevel.Fatal:
-                    Console.ForegroundColor = ConsoleColor.Magenta;
-                    break;
+                switch (level) {
+                    case LogLevel.Debug:
+                        Console.ForegroundColor = ConsoleColor.Gray;
+                        break;
+                    case LogLevel.Info:
+                        Console.ForegroundColor = ConsoleColor.White;
+                        break;
+                    case LogLevel.Warning:
+                        Console.ForegroundColor = ConsoleColor.Yellow;
+                        break;
+                    case LogLevel.Error:
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        break;
+                    case LogLevel.Fatal:
+                        Console.ForegroundColor = ConsoleColor.Magenta;
+                        break;
+                }
+
+                Console.WriteLine(message);
+                Console.ForegroundColor = originalColor;
             }
-
-            Console.WriteLine(message);
-            Console.ForegroundColor = originalColor;
+            else Func_Print(message);
         }
 
         private static void WriteToFile(string message)
