@@ -8,7 +8,6 @@ namespace AGSyncCS {
     /// 这是一个管理类外面调用此类接口
     /// </summary>
     public class BandServers {
-        public static BandServers Instance = null;
         public TCP_Server tcpServer {
             get { return _tcpServer; }
         }
@@ -23,9 +22,6 @@ namespace AGSyncCS {
         }
 
         public BandServers() {
-            if (Instance != null)
-                Logger.Error("BandServer is Instanced");
-            Instance = this;
         }
 
         TCP_Server _tcpServer = null;
