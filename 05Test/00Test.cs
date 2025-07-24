@@ -1,5 +1,6 @@
 using SimpleJson;
 using System;
+using System.Drawing;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
@@ -71,10 +72,10 @@ namespace AGSyncCS
                     Logger.Info("todo:房主点开始了，成员开始加载曲谱:" + sm);
                 });
                 c.onPush(Protocals.TakePos, (sm) => {
-                    Logger.Info("有人占位了，当前位置情况:" + sm);
+                    Logger.Info("有人占位了，当前占位:" + sm);
                 });
                 c.onPush(Protocals.CancelPos, (sm) => {
-                    Logger.Info("有人取消位置了，当前位置情况:" + sm);
+                    Logger.Info("有人取消位置了，当前占位:" + sm);
                 });
                 clients[i] = c;
             }
@@ -185,12 +186,42 @@ namespace AGSyncCS
                     var sm = (SM_TakePos)resp;
                     Logger.Info("TakePos Response: " + sm.ToString());
                 };
+                Logger.Info("==== client0 发送消息：take pos 0 ====");
                 c.send(cm);
                 Thread.Sleep(1000);
                 //lstodo add global errorCode handler like position_occupied
+                Logger.Info("==== client0 发送消息:take pos 0 ====");
+
                 c.send(cm);
                 Thread.Sleep(1000);
             }
+
+            for(int i = 0; i < 5; ++i){
+                var c = clients[1];
+                if (true) {
+                    var cm = new CM_TakePos();
+                    cm.pos = 1;
+                    cm.onResponse = (resp) => {
+                        var sm = (SM_TakePos)resp;
+                        Logger.Info("TakePos Response: " + sm.ToString());
+                    };
+                    Logger.Info(string.Format("==== client1 发送消息:take pos 1 ({0}/5)====", i));
+                    c.send(cm);
+                    Thread.Sleep(1000);
+                }
+                if (true) {
+                    var cm = new CM_CancelPos();
+                    cm.pos = 1;
+                    cm.onResponse = (resp) => {
+                        var sm = (SM_CancelPos)resp;
+                        Logger.Info("TakePos Response: " + sm.ToString());
+                    };
+                    Logger.Info(string.Format("==== client1 发送消息:cancel pos 1 ({0}/5)====", i));
+                    c.send(cm);
+                    Thread.Sleep(1000);
+                }
+            }
+
             if (true) {
                 var c = clients[1];
                 var cm = new CM_TakePos();
@@ -198,22 +229,12 @@ namespace AGSyncCS
                 cm.onResponse = (resp) => {
                     var sm = (SM_TakePos)resp;
                     Logger.Info("TakePos Response: " + sm.ToString());
+                    c.pos = sm.pos;//Important!
                 };
+                Logger.Info("==== client1 发送消息:take pos 1 ====");
                 c.send(cm);
                 Thread.Sleep(1000);
             }
-            if (true) {
-                var c = clients[1];
-                var cm = new CM_CancelPos();
-                cm.pos = 1;
-                cm.onResponse = (resp) => {
-                    var sm = (SM_CancelPos)resp;
-                    Logger.Info("TakePos Response: " + sm.ToString());
-                };
-                c.send(cm);
-                Thread.Sleep(1000);
-            }
-
 
             servers.tcpServer.notifyStartLoading();
             Thread.Sleep(1000);
@@ -223,6 +244,7 @@ namespace AGSyncCS
                     int progress0_100 = 0;
                     while(progress0_100 <= 100) {
                         progress0_100 += 10;
+                        if (progress0_100  > 100) progress0_100 = 100;
 
                         var cm = new CM_LoadingProgress();
                         cm.pos = client.pos;

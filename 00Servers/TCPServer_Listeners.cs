@@ -149,16 +149,24 @@ namespace AGSyncCS {
         }
 
         void on(CM_LoadingProgress cm, ref int errorCode, ref SM sm_response) {
-            var sm = new SM_LoadingProgress();
-            BandServers.Instance.room.loadingProgresses0_100[cm.pos] = cm.progress0_100;
-            sm.usersLoadingProgress0_100 = new int[Config.MaxPlayersPerRoom];
-
-            for(int i = 0; i < Config.MaxPlayersPerRoom; i++) {
-                sm.usersLoadingProgress0_100[i] = server.room.loadingProgresses0_100[i];
+            Logger.Debug("on cm_loadingprogress, pos:" + cm.pos + " p:" + cm.progress0_100);
+            if(cm.pos < 0 ||
+                cm.pos >= _bandServers.room.loadingProgresses0_100.Length) {
+                errorCode = ErrorCode.InvalidPosIndex;
             }
-            sm_response = sm;
+            else { 
 
-            if (sm.allCompleted) {
+                var sm = new SM_LoadingProgress();
+                _bandServers.room.loadingProgresses0_100[cm.pos] = cm.progress0_100;
+
+                sm.usersLoadingProgress0_100 = new int[_bandServers.room.posesTaken.Count] ;
+                for(int i = 0; i < sm.usersLoadingProgress0_100.Length; ++i) {
+                    sm.usersLoadingProgress0_100[i] = server.room.loadingProgresses0_100[i];
+                }
+                sm_response = sm;
+
+                if (sm.allCompleted) {
+                }
             }
         }
 

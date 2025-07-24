@@ -13,7 +13,7 @@ namespace AGSyncCS
 {
     public partial class TCP_Server : ServerBase {
 
-        
+        private BandServers _bandServers;
         private TcpListener listener;
 
         private Thread serverThread;
@@ -24,8 +24,9 @@ namespace AGSyncCS
         private int tcpConnectionTimeOut;
 
 
-        public TCP_Server()
+        public TCP_Server(BandServers bs)
         {
+            _bandServers = bs; 
             this.PortBase = Config.TCP_SERVER_PORT;
 
             //if (Instance == null) Instance = this;
@@ -115,7 +116,8 @@ namespace AGSyncCS
                     }
 
                     // Create new connection handler
-                    TcpClientConnection connection = new TcpClientConnection(this, client, tcpConnectionTimeOut);
+                    TcpClientConnection connection = new TcpClientConnection(this, _bandServers,
+                        client, tcpConnectionTimeOut);
                     
                     lock (connectionsLock)
                     {

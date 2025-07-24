@@ -42,9 +42,9 @@ namespace AGSyncCS {
 
         public override string ToString() {
             int size = posesTaken == null ? 0 : posesTaken.Length;
-            var s = "posesState size:" + size +" ";
+            var s = "posesTaken size:" + size +" ";
             for (int i = 0; i < size; ++i)
-                s += posesTaken[i] + " ";
+                s += string.Format("[{0}]={1}",i, posesTaken[i]);
             return s;
         }
     }

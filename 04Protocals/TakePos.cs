@@ -43,7 +43,7 @@ namespace AGSyncCS {
 
         public override string ToString() {
             int size = posesTaken == null ? 0 : posesTaken.Length;
-            var s = "posesState size:" + size +" ";
+            var s = "sm_takepos posesTaken:";
             for (int i = 0; i < size; ++i)
                 s += posesTaken[i] + " ";
             return s;

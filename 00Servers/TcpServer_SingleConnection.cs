@@ -18,9 +18,11 @@ namespace AGSyncCS {
         private Thread receiveThread;
         private readonly object streamLock = new object();
         private TCP_Server server;
+        private BandServers _bandServers = null;
 
-        public TcpClientConnection(TCP_Server server, TcpClient client, int timeout)
+        public TcpClientConnection(TCP_Server server, BandServers bs, TcpClient client, int timeout)
         {
+            this._bandServers = bs;
             this.server = server;
             this.client = client;
             this.timeout = timeout;
@@ -149,16 +151,16 @@ namespace AGSyncCS {
                     writer.Write((int)eMessageType.Response);
                     writer.Write(protocal);
                     writer.Write(messageUID);
-                    writer.Write(errorCode);//在push时无errorcode，但是push也用这套，省（个接口+推送判断）
-                    Logger.Debug(string.Format("Before s2c protocal:{0} msgUID:{1} errorCode:{2}",
-                        protocal, messageUID, errorCode));
+                    writer.Write(errorCode);
+                    //Logger.Debug(string.Format("Before s2c protocal:{0} msgUID:{1} errorCode:{2}",
+                    //    protocal, messageUID, errorCode));
 
                     if (errorCode == ErrorCode.None){
                         if (sm == null) Logger.Warning("errorCode or sm, U forgot 2 set one of 'em!!!");
                         else {
                             sm.writeTo(writer);
                             stream.Write(buffer, 0, (int)ms.Length);
-                            Logger.Debug(string.Format("S2C {0}: {1}", remoteEndPoint, sm.ToString()));
+                            //Logger.Debug(string.Format("S2C {0}: {1}", remoteEndPoint, sm.ToString()));
                         }
                     }
                 }

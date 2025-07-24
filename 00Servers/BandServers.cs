@@ -34,7 +34,7 @@ namespace AGSyncCS {
         public int portTCP { get { return _tcpServer.port; } }
         public int portUDP { get { return _udpServer.port; } }
         public void start(Action onSuccess, Action<int> onFail) {
-            _tcpServer = new TCP_Server();
+            _tcpServer = new TCP_Server(this);
             _udpServer = new UDP_Server();
 
             _tcpServer.start(() => {

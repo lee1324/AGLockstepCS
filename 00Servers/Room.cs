@@ -39,10 +39,11 @@ namespace AGSyncCS {
             usersConnections = new List<TcpClientConnection>();
 
             posesTaken = new List<int>();
-            loadingProgresses0_100 = new int[Config.MaxPlayersPerRoom];
         }
 
         public void resetLoadingProgresses() {
+            loadingProgresses0_100 = new int[posesTaken.Count];
+
             for(int i = 0; i < loadingProgresses0_100.Length; ++i) {
                 loadingProgresses0_100[i] = 0;
             }

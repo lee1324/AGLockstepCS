@@ -13,7 +13,7 @@ public class ErrorCode
     /// 可能原因 不在同一局域网，或服务器未启动
     /// </summary>
     public const int ConnectServer_Failed = 12;
-
+    public const int InvalidPosIndex = 13;
 
     /// <summary>
     /// 需要排队
